@@ -1,11 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+
   typescript: {
     ignoreBuildErrors: true,
   },
+
   images: {
     unoptimized: true,
   },
-}
 
-export default nextConfig
+  basePath:
+    process.env.GITHUB_REPOSITORY?.split('/')[1]
+      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}`
+      : '',
+};
+
+export default nextConfig;

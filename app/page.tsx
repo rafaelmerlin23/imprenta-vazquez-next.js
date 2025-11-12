@@ -3,34 +3,63 @@
 import type React from "react"
 
 import { mockUsers,User } from "@/lib/mock-data"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, UserCog } from "lucide-react"
 import Image from 'next/image'
+import axios from '@/lib/axios'
+
 
 export default function HomePage() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const router = useRouter();
+  const [username, setUsername] = useState("henryyv");
+  const [password, setPassword] = useState("password");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const user:User|undefined = mockUsers.find(u => u.email == email);
-    
-    if(user?.role == "admin"){
+  useEffect(()=>{
+    if(localStorage.getItem("token")){
       router.push("/admin/dashboard");
-    }else{
-      router.push("/client/dashboard");
     }
+  },[])
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const user:User|undefined = mockUsers.find(u => u.name == username);
+    await login()  
+
 
   }
+  
+  const login = async () => {
+  try {
+    await axios.get('/sanctum/csrf-cookie');
+    
+    const response = await axios.post('/api/login', {
+      username,
+      password
+    });
+    if(response.data){
+      
+      localStorage.setItem("token",response?.data?.token.toString());
+      if(response?.data?.user?.isAdmin == 1){
+        router.push("/admin/dashboard");
+      }else{
+        router.push("/client/dashboard");
+      }
+    }
+  } catch (error: any) {
+    console.error('Login error:', error);
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Data:', error.response.data);
+    }
+  }
+}
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <div className="container mx-auto px-4 py-16">
         
@@ -49,13 +78,13 @@ export default function HomePage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Label htmlFor="username">Correo electrónico</Label>
                   <Input
-                    id="email"
-                    type="email"
+                    id="text"
+                    type="text"
                     placeholder="admin@impresiones.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                   />
                 </div>

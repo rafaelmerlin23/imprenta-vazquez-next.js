@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,10 +9,58 @@ import { LogOut, Users, FileText, Plus } from "lucide-react"
 import { mockRequests, mockUsers } from "@/lib/mock-data"
 import { RequestsTable } from "@/components/requests-table"
 import { ClientsTable } from "@/components/clients-table"
+import {Client} from "@/lib/types"
+import axios from '@/lib/axios'
+import {DetailClient} from "@/components/detail-client"
+import {CreateClient} from "@/components/add-client"
 
 export default function AdminDashboard() {
   const [requests] = useState(mockRequests)
-  const [clients] = useState(mockUsers.filter((u) => u.role === "client"))
+  const [clients,setClients] = useState<Client[]|null>(null);
+  const [clientStatus,setClientStatus] =  useState<string>("show-all");
+  const [clientIdSelected,setClientIdSelected] = useState<Number>(0);
+  
+  const closeSession = ()=>{
+    localStorage.removeItem("token")
+  }
+
+ useEffect(() => {
+    const handlePopState = () => {
+      if (clientStatus !== "show-all") {
+        setClientStatus("show-all");
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [clientStatus]);
+
+  useEffect(() => {
+    if (clientStatus !== "show-all") {
+      window.history.pushState({ clientStatus }, "", window.location.href);
+    }
+  }, [clientStatus]);
+
+  useEffect(()=>{
+    axios.get("/api/customers", {
+    headers: {
+      'Authorization':`Bearer ${localStorage.getItem("token")}`
+    }
+    })
+    .then(response => {
+      console.log('Response data:', response.data);
+      console.log('Response headers:', response.headers);
+      setClients(response.data.data)
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+
+  },[])
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +76,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <Link href="/">
-            <Button variant="outline">
+            <Button onClick={()=>closeSession()} variant="outline">
               <LogOut className="mr-2 h-4 w-4" />
               Cerrar Sesión
             </Button>
@@ -92,19 +140,41 @@ export default function AdminDashboard() {
 
           <TabsContent value="clients" className="space-y-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <div>
-                  <CardTitle>Clientes Registrados</CardTitle>
-                  <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
-                </div>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nuevo Cliente
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <ClientsTable clients={clients} />
-              </CardContent>
+              {(() => {
+  switch(clientStatus) {
+    case "show-all":
+      return (
+        <>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>Clientes Registrados</CardTitle>
+              <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
+            </div>
+            <Button onClick={()=> setClientStatus("create")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Cliente
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <ClientsTable setClientIdSelected={setClientIdSelected} setStatus={setClientStatus} clients={clients} />
+          </CardContent>
+        </>
+      );
+    
+    case "show":
+      return <DetailClient ClientId={clientIdSelected}/>
+    
+    case "edit":
+      return <div>editar 1 usuario</div>;
+    
+    case "remove":
+      return <div>aqui elimino un usuario por ahora luego veo que pedo</div>;
+    case "create":
+      return <div>nalga</div>
+    default:
+      return <div>nada</div>;
+  }
+  })()}
             </Card>
           </TabsContent>
         </Tabs>

@@ -6,32 +6,27 @@ import {Spinner} from "@/components/ui/spinner"
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from "@/components/ui/button"
 import { Pen} from "lucide-react"
-interface ClientsDetailProps {
-  ClientId: Number ,
-}
-export function DetailClient({ ClientId }: ClientsDetailProps){
-    const [client,setClient] = useState<ClientData | null>(null);
-    const [isLoading,setIsloading] = useState(false);
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAppStore } from "@/app/store"
 
-    useEffect(()=>{
-    
-    if(client === null){
-        setIsloading(true);
-        axios.get(`/api/customers/${ClientId}`, {
-        headers: {
-        'Authorization':`Bearer ${localStorage.getItem("token")}`
+export function DetailClient(){
+    const {setClient,clientIdSelected,getClient, client,isLoading,detailsOfViewedCustomers} = useAppStore()
+
+    useEffect(() => {
+    console.log(detailsOfViewedCustomers)
+    if (detailsOfViewedCustomers.length > 0) {
+        const detail = detailsOfViewedCustomers.find(detail => detail.id === clientIdSelected)
+        if (detail) {
+        setClient(detail)
+        } else {
+        getClient()
         }
-        })
-        .then(response => {
-            let result:ResponseClient = response.data;
-            setClient(result.data);
-            setIsloading(false);
-        })
-        .catch(error => {
-        console.error('Error:', error);});
+    } else {
+        getClient()
     }
-     },[])
-     
+    }, [detailsOfViewedCustomers, clientIdSelected])
+
+    
     return(
         <>
         {
@@ -95,8 +90,39 @@ export function DetailClient({ ClientId }: ClientsDetailProps){
                         </div>
                         
                     </div>
+                    
                 </CardContent>
                 </Card>
+                <Tabs defaultValue="Address" className="mt-3 space-y-6">
+                           <TabsList className="mb-3 grid w-full max-w-md grid-cols-3">
+                                <TabsTrigger value="Address" className="gap-2">
+                                Dirección
+                                </TabsTrigger>
+                                <TabsTrigger value="Requests" className="gap-2">
+                                Solicitudes
+                                </TabsTrigger>
+                                <TabsTrigger value="Jobs" className="gap-2">
+                                Trabajos realizados
+                                </TabsTrigger>
+                                
+                            </TabsList>
+                        <TabsContent value="Requests" className="space-y-6">
+                            solcitudes
+                        </TabsContent>
+                        <TabsContent value="Address" className="space-y-6">
+                           <Card className="mt-0">
+                            <CardHeader>
+                             <CardTitle>Información de la dirección de cliente </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+hola
+                            </CardContent>
+                           </Card>
+                        </TabsContent>
+                        <TabsContent value="Jobs" className="space-y-6">
+                            chambas
+                        </TabsContent>
+                    </Tabs>
             </CardContent>
         </>
             ):(

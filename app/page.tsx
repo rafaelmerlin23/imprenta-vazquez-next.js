@@ -10,13 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from 'next/image'
-import axios from '@/lib/axios'
+import { useAppStore } from "./store"
 
 
 export default function HomePage() {
   const router = useRouter();
-  const [username, setUsername] = useState("henryyv");
-  const [password, setPassword] = useState("password");
+  const { username, password, setUsername, setPassword, login} = useAppStore()
 
   useEffect(()=>{
     if(localStorage.getItem("token")){
@@ -24,39 +23,21 @@ export default function HomePage() {
     }
   },[])
   
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      router.push("/admin/dashboard")
+    }
+  }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const user:User|undefined = mockUsers.find(u => u.name == username);
-    await login()  
-
-
+    await login()
+    const storedToken = localStorage.getItem("token")
+    if (storedToken) router.push("/admin/dashboard")
   }
   
-  const login = async () => {
-  try {
-    await axios.get('/sanctum/csrf-cookie');
-    
-    const response = await axios.post('/api/login', {
-      username,
-      password
-    });
-    if(response.data){
-      
-      localStorage.setItem("token",response?.data?.token.toString());
-      if(response?.data?.user?.isAdmin == 1){
-        router.push("/admin/dashboard");
-      }else{
-        router.push("/client/dashboard");
-      }
-    }
-  } catch (error: any) {
-    console.error('Login error:', error);
-    if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Data:', error.response.data);
-    }
-  }
-}
+  
 
   return (
     

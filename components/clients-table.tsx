@@ -1,15 +1,13 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pencil, Trash2,Eye } from "lucide-react"
-import { Client } from "@/lib/types"
+import { ClientStatus } from "@/lib/types"
+import { useAppStore } from "@/app/store"
 
-interface ClientsTableProps {
-  clients: Client[] | null,
-  setStatus: Function,
-  setClientIdSelected: Function
-}
 
-export function ClientsTable({ clients,setStatus,setClientIdSelected }: ClientsTableProps) {
+export function ClientsTable() {
+  const { clients,setClientIdSelected,setClientStatus} = useAppStore()
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -40,15 +38,15 @@ export function ClientsTable({ clients,setStatus,setClientIdSelected }: ClientsT
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button onClick={()=> setStatus("edit")} variant="ghost" size="sm">
+                    <Button onClick={()=> setClientStatus(ClientStatus.Edit)} variant="ghost" size="sm">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button onClick={()=> setStatus("remove")} variant="ghost" size="sm">
+                    <Button onClick={()=> setClientStatus(ClientStatus.Delete)} variant="ghost" size="sm">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <Button onClick={()=> {
                       setClientIdSelected(client.id)
-                      setStatus("show")
+                      setClientStatus(ClientStatus.Show)
                     }} variant="ghost" size="sm">
                       <Eye className="h-4 w-4" />
                     </Button>

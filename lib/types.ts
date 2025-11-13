@@ -51,3 +51,11 @@ export interface User {
   updated_at: string
   deleted_at: any
 }
+
+export enum ClientStatus {
+  ShowAll,
+  Show,
+  Create,
+  Delete,
+  Edit     
+}

@@ -17,10 +17,10 @@
 
   export default function AdminDashboard() {
     const [requests] = useState(mockRequests)
-    const {clients,getClients,clientIdSelected,clientStatus,setClientStatus} = useAppStore()
+    const {logout,clients,getClients,clientStatus,setClientStatus} = useAppStore()
 
     const closeSession = ()=>{
-      localStorage.removeItem("token")
+      logout()
     }
 
 

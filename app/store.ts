@@ -1,118 +1,194 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 import axios from "@/lib/axios"
-import { useRouter } from "next/navigation"
-import {Client,ClientStatus,ClientData} from "@/lib/types"
+import {User, Client, ClientStatus, ClientData } from "@/lib/types"
+import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
+
 
 interface AppStore {
   username: string
   password: string
-  clients: Client[]| null
+  clients: Client[] | null
   token: string | null
-  clientStatus:ClientStatus
-  clientIdSelected: Number
-  isLoading:Boolean
-  detailsOfViewedCustomers:ClientData[],
+  clientStatus: ClientStatus
+  clientIdSelected: number
+  isLoading: boolean
+  detailsOfViewedCustomers: ClientData[]
+  client: ClientData | null
+  currentLoginInfoUser: User |null
+  thereIstoken:Boolean
+
+  // setters
   setUsername: (username: string) => void
   setPassword: (password: string) => void
-  AddDetailsOfCostumer:(clientData:ClientData)=> void
-  login: () => Promise<void>
-  logout: () => void
-  getClients:()=> Promise<void>,
-  setClientStatus:(clientStatus:ClientStatus)=> void,
-  setClientIdSelected:(ClientIdSelected:Number)=> void
-  client:ClientData|null
-  getClient:()=> Promise<void>
-  setClient:(clientData:ClientData)=> void
+  setClientIdSelected: (id: number) => void
+  setClientStatus: (status: ClientStatus) => void
+  setClient: (client: ClientData) => void
 
+  // data methods
+  AddDetailsOfCostumer: (clientData: ClientData) => void
+  getClients: () => Promise<void>
+  getClient: () => Promise<void>
+
+  // auth
+  login: (router: AppRouterInstance) => Promise<void>
+  logout: () => void  
 }
 
-export const useAppStore = create<AppStore>((set, get) => ({
-  username: "henryyv",
-  password: "password",
-  token: null,
-  clients:null,
-  clientStatus:ClientStatus.ShowAll,
-  clientIdSelected:0,
-  client:null,
-  isLoading:false,
-  detailsOfViewedCustomers:[],
-  AddDetailsOfCostumer:(clientData)=>{
-    set((state) => ({
-    ...state,
-    detailsOfViewedCustomers: [
-        ...(state.detailsOfViewedCustomers || []),
-        clientData
-    ]
-    }))
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set, get) => ({
+      username: "henryyv",
+      password: "password",
+      token: null,
+      clients: null,
+      clientStatus: ClientStatus.ShowAll,
+      clientIdSelected: 0,
+      client: null,
+      isLoading: false,
+      detailsOfViewedCustomers: [],
+      currentLoginInfoUser: null,
+      thereIstoken:false,
 
-  },
-  setClient:(clientData)=>set({client:clientData}) ,
-  setUsername: (username) => set({ username }),
-  setPassword: (password) => set({ password }),
-  setClientIdSelected:(clientIdSelected)=>set({clientIdSelected}),
-  getClients:async ()=>{
-        axios.get("/api/customers", {
-    headers: {
-      'Authorization':`Bearer ${localStorage.getItem("token")}`
-    }
-    })
-    .then(response => {
-      set({clients:response.data.data})
-    
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
-  },
-// const [client,setClient] = useState<ClientData | null>(null);
-//     const [isLoading,setIsloading] = useState(false);
+      // ------------------------------
+      // SETTERS
+      // ------------------------------
+      setUsername: (username) => set({ username }),
+      setPassword: (password) => set({ password }),
+      setClient: (client) => set({ client }),
+      setClientIdSelected: (id) => set({ clientIdSelected: id }),
+      setClientStatus: (status) => set({ clientStatus: status }),
 
-  setClientStatus:(clientStatus)=> set({clientStatus}),
-  getClient:async ()=>{
-        set({isLoading:true})
-        const {clientIdSelected} = get()
-        axios.get(`/api/customers/${clientIdSelected}`, {
-        headers: {
-        'Authorization':`Bearer ${localStorage.getItem("token")}`
+      AddDetailsOfCostumer: (clientData) => {
+        set((state) => ({
+          detailsOfViewedCustomers: [
+            ...state.detailsOfViewedCustomers,
+            clientData,
+          ],
+        }))
+      },
+
+      // ------------------------------
+      // GET CLIENTS
+      // ------------------------------
+      getClients: async () => {
+        try {
+          const {token} = get()
+          const res = await axios.get("/api/customers", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          
+          set({ clients: res.data.data })
+          console.log(res)
+        } catch (error) {
+          console.error("Error loading clients", error)
         }
-        })
-        .then(response => {
-            const {detailsOfViewedCustomers} = get()
-            let result = response.data;
-            set({client:result.data})
-            set({isLoading:false})
-            if(!detailsOfViewedCustomers.some(detail=> detail.id ==result.data.id)){
-                set((state) => ({
-                ...state,
-                detailsOfViewedCustomers: [
-                    ...(state.detailsOfViewedCustomers || []),
-                    result.data
-                ]
-                }))
-            }
-              
-        })
-        .catch(error => {
-            set({isLoading:false})
-        console.error('Error:', error);});
-  },
-  login: async () => {
-    const { username, password } = get()
-    try {
-      await axios.get("/sanctum/csrf-cookie")
-      const response = await axios.post("/api/login", { username, password })
-      const token = response.data?.token?.toString()
-      if (token) {
-        localStorage.setItem("token", token)
-        set({ token })
-      }
-    } catch (err) {
-      console.error("Error en login:", err)
-    }
-  },
+      },
 
-  logout: () => {
-    localStorage.removeItem("token")
-    set({ token: null })
-  },
-}))
+      // ------------------------------
+      // GET CLIENT 
+      // ------------------------------
+      getClient: async () => {
+        const { clientIdSelected, detailsOfViewedCustomers,token } = get()
+
+        set({ isLoading: true })
+
+        const cached = detailsOfViewedCustomers.find(
+          (d) => d.id === clientIdSelected
+        )
+
+        if (cached) {
+          set({ client: cached, isLoading: false })
+          return
+        }
+
+        try {
+          const res = await axios.get(`/api/customers/${clientIdSelected}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+
+          const data = res.data.data
+
+          set({ client: data })
+
+          set((state) => ({
+            detailsOfViewedCustomers: [...state.detailsOfViewedCustomers, data],
+          }))
+        } catch (err) {
+          console.error("Error loading client", err)
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      // ------------------------------
+      // LOGIN
+      // ------------------------------
+      login: async (router) => {
+        const { username, password } = get()
+        try {
+          await axios.get("/sanctum/csrf-cookie")
+          const response = await axios.post("/api/login", {
+            username,
+            password,
+          })
+          console.log(response)
+          const token:string = response.data?.token?.toString()
+          const userInfo:User = response?.data?.user
+          
+          if (token) {
+            set({ token })
+            set({thereIstoken:true})
+          }
+
+          if(userInfo){
+            set({currentLoginInfoUser:userInfo})
+            if(userInfo.isAdmin){
+              router.push("/admin/dashboard")
+            }else if(!userInfo.isAdmin){
+              router.push("/client/dashboard")
+            }
+          }
+
+        } catch (err) {
+          console.error("Error en login:", err)
+        }
+      },
+
+      // ------------------------------
+      // LOGOUT
+      // ------------------------------
+      logout: () => {
+        set({
+          token: null,
+          client: null,
+          clients: null,
+          currentLoginInfoUser:null,
+          detailsOfViewedCustomers: [],
+          thereIstoken:false,
+        })
+      },
+    }),
+
+    // ------------------------------
+    // PERSIST CONFIG
+    // ------------------------------
+    {
+      name: "app-storage", 
+
+      partialize: (state) => ({
+        currentLoginInfoUser:state.currentLoginInfoUser,
+        token: state.token,
+        clients: state.clients,
+        client: state.client,
+        detailsOfViewedCustomers: state.detailsOfViewedCustomers,
+        clientIdSelected: state.clientIdSelected,
+        clientStatus: state.clientStatus,
+      }),
+    }
+  )
+)

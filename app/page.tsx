@@ -15,26 +15,17 @@ import { useAppStore } from "./store"
 
 export default function HomePage() {
   const router = useRouter();
-  const { username, password, setUsername, setPassword, login} = useAppStore()
-
-  useEffect(()=>{
-    if(localStorage.getItem("token")){
-      router.push("/admin/dashboard");
-    }
-  },[])
-  
+  const {currentLoginInfoUser,thereIstoken ,username, password, setUsername, setPassword, login} = useAppStore()
 
   useEffect(() => {
-    if (localStorage.getItem("token")) {
-      router.push("/admin/dashboard")
+    if(thereIstoken){
+      currentLoginInfoUser?.isAdmin ? router.push("/admin/dashboard"):router.push("/client/dashboard")
     }
-  }, [router])
+  }, [thereIstoken])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login()
-    const storedToken = localStorage.getItem("token")
-    if (storedToken) router.push("/admin/dashboard")
+    await login(router)
   }
   
   

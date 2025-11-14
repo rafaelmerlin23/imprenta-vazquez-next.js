@@ -3,6 +3,8 @@ import { ClientData,ResponseClient } from "@/lib/types"
 import { useEffect, useState } from "react"
 import axios from '@/lib/axios'
 import {Spinner} from "@/components/ui/spinner"
+import {Field,FieldGroup,FieldLabel} from "@/components/ui/field"
+import {Input} from "@/components/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from "@/components/ui/button"
 import { Pen} from "lucide-react"
@@ -10,25 +12,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppStore } from "@/app/store"
 
 export function DetailClient(){
-    const {setClient,clientIdSelected,getClient, client,isLoading,detailsOfViewedCustomers} = useAppStore()
+    const {getClient, client,isLoading} = useAppStore()
+    const [nalga,setNalga] = useState<number>(1);
 
     useEffect(() => {
-    console.log(detailsOfViewedCustomers)
-    if (detailsOfViewedCustomers.length > 0) {
-        const detail = detailsOfViewedCustomers.find(detail => detail.id === clientIdSelected)
-        if (detail) {
-        setClient(detail)
-        } else {
         getClient()
-        }
-    } else {
-        getClient()
-    }
-    }, [detailsOfViewedCustomers, clientIdSelected])
-
+    }, [])
     
     return(
         <>
+        {
+nalga
+        }
+       
         {
         !isLoading ? (
         <>
@@ -115,7 +111,116 @@ export function DetailClient(){
                              <CardTitle>Información de la dirección de cliente </CardTitle>
                             </CardHeader>
                             <CardContent>
-hola
+                                <FieldGroup>
+                                    <div className="grid grid-cols-2 gap-4">
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Dirección
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.address}
+                                        required
+                                        />
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Código postal
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.postal_code}
+                                        required
+                                        />
+                                    </Field>
+                                    </div>
+                                     <div className="grid grid-cols-2 gap-4">
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Colonia
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.neighborhood}
+                                        required
+                                        />
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Municipio
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.municipality}
+                                        required
+                                        />
+                                    </Field>
+                                    </div>
+                                     <div className="grid grid-cols-2 gap-4">
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Localidad
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.locality_name}
+                                        required
+                                        />
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Entidad federativa
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.federal_entity}
+                                        required
+                                        />
+                                    </Field>
+                                    </div>
+                                     <div className="grid grid-cols-2 gap-4">
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Numero interior
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id="checkout-7j9-card-name-43j"
+                                        placeholder={client?.customer_address.interior_number}
+                                        required
+                                        />
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Numero exterior
+                                        </FieldLabel>
+                                        <Input
+                                        disabled
+                                        id={client?.customer_address.exterior_number}
+                                        placeholder="96896"
+                                        required
+                                        />
+                                    </Field>
+                                    </div>
+                                    <Field>
+                                        <FieldLabel htmlFor="checkout-7j9-card-name-43j">
+                                        Entre calles
+                                        </FieldLabel>
+                                        <Input
+                                        className="input-test"
+                                        disabled
+                                        id={client?.customer_address.between_streets}
+                                        placeholder="96896"
+                                        required
+                                        />
+                                    </Field>
+                                </FieldGroup>
                             </CardContent>
                            </Card>
                         </TabsContent>

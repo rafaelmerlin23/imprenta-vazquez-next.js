@@ -8,16 +8,16 @@
   import { LogOut, Users, FileText, Plus } from "lucide-react"
   import { mockRequests, mockUsers } from "@/lib/mock-data"
   import { RequestsTable } from "@/components/requests-table"
-  import { ClientsTable } from "@/components/clients-table"
-  import {Client,ClientStatus} from "@/lib/types"
+  import { ClientsTable } from "@/components/client-form/clients-table"
+  import {Client,ClientStatus,FormState} from "@/lib/types"
   import axios from '@/lib/axios'
-  import {DetailClient} from "@/components/detail-client"
-  import {CreateClient} from "@/components/add-client"
-  import {useAppStore } from "@/app/store"
+  import {DetailClient} from "@/components/client-form/detail-client"
+  import {CreateClient} from "@/components/client-form/add-client"
+  import {useAppStore } from "@/app/stores//useAppStore"
 
   export default function AdminDashboard() {
     const [requests] = useState(mockRequests)
-    const {logout,clients,getClients,clientStatus,setClientStatus} = useAppStore()
+    const {logout,clients,getClients,clientStatus,setClientStatus,setFormClientState} = useAppStore()
 
     const closeSession = ()=>{
       logout()
@@ -130,41 +130,33 @@
 
             <TabsContent value="clients" className="space-y-6">
               <Card>
-                {(() => {
-    switch(clientStatus) {
-      case ClientStatus.ShowAll:
-        return (
-          <>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle>Clientes Registrados</CardTitle>
-                <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
-              </div>
-              <Button onClick={()=> setClientStatus(ClientStatus.Create)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo Cliente
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <ClientsTable  />
-            </CardContent>
-          </>
-        );
-      
-      case ClientStatus.Show:
-        return <DetailClient/>
-      
-      case ClientStatus.Edit:
-        return <div>editar 1 usuario</div>;
-      
-      case ClientStatus.Delete:
-        return <div>aqui elimino un usuario por ahora luego veo que pedo</div>;
-      case ClientStatus.Create:
-        return <div>nalga</div>
-      default:
-        return <div>nada</div>;
-    }
-    })()}
+   
+              {clientStatus === ClientStatus.ShowAll    ? (
+                <>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <CardTitle>Clientes Registrados</CardTitle>
+                      <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
+                    </div>
+                    <Button onClick={() => {
+                      setFormClientState(FormState.Create);
+                      setClientStatus(ClientStatus.Show);
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nuevo Cliente
+                    </Button>
+                  </CardHeader>
+
+                  <CardContent>
+                    <ClientsTable />
+                  </CardContent>
+                </>
+              ) : (
+                <>
+                <DetailClient />
+                </>
+              )}
+
               </Card>
             </TabsContent>
           </Tabs>

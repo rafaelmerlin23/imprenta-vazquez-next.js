@@ -55,7 +55,10 @@ export interface User {
 export enum ClientStatus {
   ShowAll,
   Show,
+}
+
+export enum FormState{
   Create,
-  Delete,
-  Edit     
+  Edit,
+  Show,
 }

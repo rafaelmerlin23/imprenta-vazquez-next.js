@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pencil, Trash2,Eye } from "lucide-react"
-import { ClientStatus } from "@/lib/types"
-import { useAppStore } from "@/app/store"
+import { ClientStatus,FormState } from "@/lib/types"
+import { useAppStore } from "@/app/stores/useAppStore"
 
 
 export function ClientsTable() {
-  const { clients,setClientIdSelected,setClientStatus} = useAppStore()
+  const { clients,setClientIdSelected,setClientStatus,setFormClientState} = useAppStore()
   
   return (
     <div className="rounded-md border">
@@ -38,15 +38,16 @@ export function ClientsTable() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button onClick={()=> setClientStatus(ClientStatus.Edit)} variant="ghost" size="sm">
+                    <Button onClick={()=> setFormClientState(FormState.Edit)} variant="ghost" size="sm">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button onClick={()=> setClientStatus(ClientStatus.Delete)} variant="ghost" size="sm">
+                    <Button onClick={()=>{}} variant="ghost" size="sm">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <Button onClick={()=> {
                       setClientIdSelected(client.id)
-                      setClientStatus(ClientStatus.Show)
+                      setFormClientState(FormState.Edit);
+                      setClientStatus(ClientStatus.Show);
                     }} variant="ghost" size="sm">
                       <Eye className="h-4 w-4" />
                     </Button>

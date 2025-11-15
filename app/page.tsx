@@ -10,18 +10,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from 'next/image'
-import { useAppStore } from "./store"
+import { useAppStore } from "./stores/useAppStore"
 
 
 export default function HomePage() {
   const router = useRouter();
-  const {currentLoginInfoUser,thereIstoken ,username, password, setUsername, setPassword, login} = useAppStore()
+  const {currentLoginInfoUser,isLogged ,user, password, setUser, setPassword, login} = useAppStore()
 
   useEffect(() => {
-    if(thereIstoken){
+    if(isLogged){
       currentLoginInfoUser?.isAdmin ? router.push("/admin/dashboard"):router.push("/client/dashboard")
     }
-  }, [thereIstoken])
+  }, [isLogged])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,8 +55,8 @@ export default function HomePage() {
                     id="text"
                     type="text"
                     placeholder="admin@impresiones.com"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={user}
+                    onChange={(e) => setUser(e.target.value)}
                     required
                   />
                 </div>

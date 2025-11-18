@@ -29,14 +29,23 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
       const { user, password } = get()     
       await axios.get("/sanctum/csrf-cookie")
       const response = await axios.post("/api/login", { username:user, password:password })
-
+      console.log("logeado",response)
+      
+      
       const token = response.data?.token?.toString()
       const userInfo: User = response?.data?.user
-
+      
+      if(!token) {
+        const response = await axios.get('/api/user')
+        const userdata:User = response.data
+        console.log(userdata)
+        set({currentLoginInfoUser:userdata})
+        router.push(userdata.isAdmin ? "/admin/dashboard" : "/client/dashboard")
+      }
+      
       if (token) set({ token, isLogged: true })
       if (userInfo) {
         set({ currentLoginInfoUser: userInfo });
-
         router.push(userInfo.isAdmin ? "/admin/dashboard" : "/client/dashboard")
       }
     } catch (err) {

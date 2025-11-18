@@ -11,16 +11,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppStore } from "@/app/stores/useAppStore"
 import {ClientDetailForm} from "@/components/client-form/client-detail-form"
 import { FormState,ClientStatus} from "@/lib/types"
+import { TextFieldClient } from "./text-field-client"
 
-export function DetailClient(){
-    const {setSelectedTab,selectedTab,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
+export function FormClient(){
+    const {setSelectedTab,selectedTab,clientStatus,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
     
     const goToAddress=()=>{
         setSelectedTab("Address")
     }
     
     useEffect(() => {
-        getClient()
+        if(ClientStatus.Create != clientStatus){
+            getClient()
+        }
     }, [])
     
     return(
@@ -91,33 +94,52 @@ export function DetailClient(){
                                     <p className="text-zinc-500 font-medium">
                                         Representante legal
                                     </p>
-                                    <p className="">
+                                    {formClientState==FormState.Create || formClientState==FormState.Edit? <TextFieldClient
+                                        id="Representante-legal"
+                                            value="" 
+                                        placeholder={"representante legal"}
+                                    />: <p className="">
                                         {client?.representative_name}
-                                    </p>
+                                    </p>}
                             </div>
                             <div className="flex flex-col">
                             <p className="text-zinc-500 font-medium">
                                         Número de Teléfono
                                     </p>
-                                    <p className="">
+
+                                    {formClientState==FormState.Create || formClientState==FormState.Edit? <TextFieldClient
+                                        id="numero-telefono"
+                                            value="" 
+                                        placeholder={"924139543"}
+                                    />: <p className="">
                                         {client?.phone_number}
-                                    </p>
+                                    </p>}
                             </div>
                             <div className="flex flex-col">
                                     <p className="text-zinc-500 font-medium">
                                         Nombre de usuario
                                     </p>
-                                    <p className="">
+                                    {formClientState==FormState.Create || formClientState==FormState.Edit? <TextFieldClient
+                                        id="usuario"
+                                            value="" 
+                                        placeholder={"firepants69"}
+                                    />: <p className="">
                                         {client?.user.username}
-                                    </p>
+                                    </p>}
+                                    
                             </div>
                             <div className="flex flex-col">
                                 <p className="text-zinc-500 font-medium">
                                         Correo
                                     </p>
-                                    <p className="">
+                                     {formClientState==FormState.Create || formClientState==FormState.Edit? <TextFieldClient
+                                        id="correo"
+                                            value="" 
+                                        placeholder={"firepants69@gmail.com"}
+                                    />: <p className="">
                                         {client?.user.email}
-                                    </p>
+                                    </p>}
+                                    
                             </div>
                         </div>
                         </div>
@@ -151,7 +173,83 @@ export function DetailClient(){
                              <CardTitle>Información de la dirección de cliente </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ClientDetailForm/>
+                                <div>
+            <FieldGroup>
+                <div className="grid grid-cols-2 gap-4">
+                
+                <TextFieldClient
+                    id="address"
+                    label="Dirección"
+                    value="" 
+                    placeholder={client?.customer_address.address}
+                />
+                <TextFieldClient
+                    id="postalcode"
+                    label="Código postal"
+                    value="" 
+                    placeholder={client?.customer_address.postal_code}
+                />
+
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                
+                <TextFieldClient
+                    id="neighborhood"
+                    label="Colonia"
+                    value="" 
+                    placeholder={client?.customer_address.neighborhood}
+                />
+                
+                <TextFieldClient
+                    id="municipality"
+                    label="Municipio"
+                    value="" 
+                    placeholder={client?.customer_address.municipality}
+                />
+                
+                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                
+                <TextFieldClient
+                    id="locality"
+                    label="Localidad"
+                    value="" 
+                    placeholder={client?.customer_address.locality_name}
+                />
+                
+                <TextFieldClient
+                    id="federalEntity"
+                    label="Entidad federal"
+                    value="" 
+                    placeholder={client?.customer_address.federal_entity}
+                />
+                
+                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                <TextFieldClient
+                    id="interiornumber"
+                    label="Número interior"
+                    value="" 
+                    placeholder={client?.customer_address.interior_number}
+                />
+                
+                <TextFieldClient
+                    id="exteriornumber"
+                    label="Número exterior"
+                    value="" 
+                    placeholder={client?.customer_address.exterior_number}
+                />
+                
+                </div>
+                <TextFieldClient
+                    id="beweenstreets"
+                    label="Entre calles"
+                    value="" 
+                    placeholder={client?.customer_address.between_streets}
+                />
+                
+            </FieldGroup>
+        </div>
                             </CardContent>
                            </Card>
                         </TabsContent>

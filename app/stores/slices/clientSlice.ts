@@ -4,7 +4,7 @@ import { Client, ClientStatus, ClientData,FormState } from "@/lib/types"
 import { AuthSlice } from "./authSlice"
 
 export interface ClientSlice {
-  clients: Client[] | null
+  clients: Client[] 
   client: ClientData | null
   clientStatus: ClientStatus
   clientIdSelected: number
@@ -27,7 +27,7 @@ export const createClientSlice: StateCreator<
   [],
   ClientSlice
 > = (set, get) => ({
-  clients: null,
+  clients:[],
   client: null,
   clientStatus: ClientStatus.ShowAll,
   clientIdSelected: 0,
@@ -42,14 +42,16 @@ export const createClientSlice: StateCreator<
   setFormClientState:(clientFormState)=>set({formClientState:clientFormState}),
   getClients: async () => {
     try {
+      const {clients}= get()
+      if(clients?.length >0){
+        return
+      }
       const token = get().token
-      if (!token) return
-
       const res = await axios.get("/api/customers", {
         headers: { Authorization: `Bearer ${token}` },
       })
-
       set({ clients: res.data.data })
+      console.log("hizo algo")
     } catch (err) {
       console.error("Error loading clients", err)
     }

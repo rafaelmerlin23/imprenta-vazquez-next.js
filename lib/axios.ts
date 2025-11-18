@@ -5,7 +5,24 @@ const axios = Axios.create({
     headers: {
         'X-Requested-With': 'XMLHttpRequest',
     },
+    xsrfCookieName: "XSRF-TOKEN",
+    xsrfHeaderName: "X-XSRF-TOKEN",
     withCredentials: true,
+})
+
+axios.interceptors.request.use((config) => {
+    if (typeof window !== "undefined") {
+        const token = document.cookie
+            ?.split("; ")
+            ?.find(row => row.startsWith("XSRF-TOKEN="))
+            ?.split("=")[1]
+
+        if (token) {
+            config.headers["X-XSRF-TOKEN"] = decodeURIComponent(token)
+        }
+    }
+
+    return config
 })
 
 export default axios

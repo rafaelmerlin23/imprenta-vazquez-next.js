@@ -28,9 +28,10 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
     try {
       const { user, password } = get()     
       await axios.get("/sanctum/csrf-cookie")
-      const response = await axios.post("/api/login", { username:user, password:password })
-      console.log("logeado",response)
+      console.log(user,password)
       
+      const response = await axios.post("/api/login", { username:user, password:password })
+      console.log(response)
       
       const token = response.data?.token?.toString()
       const userInfo: User = response?.data?.user
@@ -53,12 +54,10 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
     }
   },
 
-  logout: () => {
-    set({
-      token: null,
-      currentLoginInfoUser: null,
-      isLogged: false,
-    })
-    localStorage.removeItem("app-storage");
-  }
+logout: async () => {
+  axios.defaults.withCredentials = true;
+  await axios.get('/sanctum/csrf-cookie'); 
+
+  localStorage.removeItem("app-storage");
+}
 })

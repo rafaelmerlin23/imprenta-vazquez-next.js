@@ -157,9 +157,9 @@
                    <FormClient />
                   </>)
                   case ClientStatus.Create:
-                    return  (<>
-                    <FormClient />
-                    </>)
+                    return  (
+                    <CreateClient/>
+                    )
                   default:
                     return (
                       <>

@@ -15,7 +15,8 @@ export interface ClientSlice {
   setSelectedTab:(selectedTab:string)=> void
   setClientStatus: (status: ClientStatus) => void
   setClientIdSelected: (id: number) => void
-  setClient: (client: ClientData) => void
+  setClient: (client: ClientData) => void,
+  setClients:(clients:Client[])=> void
   setFormClientState: (clientFormState:FormState)=> void
   getClients: () => Promise<void>
   getClient: () => Promise<void>
@@ -36,6 +37,7 @@ export const createClientSlice: StateCreator<
   detailsOfViewedCustomers: [],
   selectedTab:"Address",
   setSelectedTab:(selectedTab)=>set({selectedTab}),
+  setClients:(clients)=>set({clients}),
   setClientStatus: (status) => set({ clientStatus: status }),
   setClientIdSelected: (id) => set({ clientIdSelected: id }),
   setClient: (client) => set({ client }),

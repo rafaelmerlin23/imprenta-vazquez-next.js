@@ -2,25 +2,27 @@ import { Badge } from "@/components/ui/badge"
 import type { RequestStatus } from "@/lib/mock-data"
 
 interface StatusBadgeProps {
-  status: RequestStatus
+  status: keyof RequestStatus
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const statusConfig = {
-    solicitada: {
+    "1": {
       label: "Solicitada",
       variant: "secondary" as const,
+      className: "bg-secondary text-secondary-foreground",
     },
-    esperando_aceptacion: {
+    "2": {
       label: "Esperando Aceptación",
       variant: "default" as const,
+      className: "bg-default text-default-foreground",
     },
-    en_proceso: {
+    "3": {
       label: "En Proceso",
       variant: "default" as const,
       className: "bg-warning text-warning-foreground",
     },
-    terminada: {
+    "4": {
       label: "Terminada",
       variant: "default" as const,
       className: "bg-success text-success-foreground",

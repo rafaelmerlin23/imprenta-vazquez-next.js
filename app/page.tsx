@@ -2,8 +2,7 @@
 
 import type React from "react"
 
-import { mockUsers,User } from "@/lib/mock-data"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +18,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if(isLogged){
-      currentLoginInfoUser?.isAdmin ? router.push("/admin/dashboard"):router.push("/client/dashboard")
+      currentLoginInfoUser?.is_admin ? router.push("/admin/dashboard") : router.push("/client/dashboard")
     }
   }, [isLogged])
 
@@ -32,7 +31,7 @@ export default function HomePage() {
 
   return (
     
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent/5">
       <div className="container mx-auto px-4 py-16">
         
         <div className="mx-auto max-w-md mt-8">

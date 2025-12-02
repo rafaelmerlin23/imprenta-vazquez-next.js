@@ -27,9 +27,9 @@ export function RequestDetailsDialog({ request, open, onOpenChange, isAdmin }: R
 
   if (!request) return null
 
-  const canValidate = isAdmin && request.status === "solicitada"
-  const canAccept = !isAdmin && request.status === "esperando_aceptacion"
-  const canMarkComplete = isAdmin && request.status === "en_proceso"
+  const canValidate = isAdmin && request.status === "1" // solicitada
+  const canAccept = !isAdmin && request.status === "2" // esperando_aceptacion
+  const canMarkComplete = isAdmin && request.status === "3" // en_proceso
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,7 +56,7 @@ export function RequestDetailsDialog({ request, open, onOpenChange, isAdmin }: R
               <Label>Fecha de Solicitud</Label>
               <div className="flex items-center gap-2 rounded-md border px-3 py-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>{new Date(request.createdAt).toLocaleDateString("es-MX")}</span>
+                <span>{new Date(request.created_at).toLocaleDateString("es-MX")}</span>
               </div>
             </div>
 

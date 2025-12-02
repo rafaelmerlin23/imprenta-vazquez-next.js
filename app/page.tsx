@@ -27,6 +27,9 @@ export default function HomePage() {
     await login(router)
   }
   
+  // useEffect(()=>{
+  //   console.log(user,password)
+  // },[user,password])
   
 
   return (

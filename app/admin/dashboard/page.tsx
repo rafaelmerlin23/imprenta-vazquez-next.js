@@ -11,7 +11,7 @@
   import { ClientsTable } from "@/components/client-form/clients-table"
   import {Client,ClientStatus,FormState} from "@/lib/types"
   import axios from '@/lib/axios'
-  import {DetailClient} from "@/components/client-form/detail-client"
+  import {FormClient} from "@/components/client-form/form-client"
   import {CreateClient} from "@/components/client-form/add-client"
   import {useAppStore } from "@/app/stores//useAppStore"
 
@@ -46,9 +46,7 @@
     }, [clientStatus]);
 
     useEffect(()=>{
-      if(clients === null){
         getClients()
-      }
     },[])
 
 
@@ -130,17 +128,19 @@
 
             <TabsContent value="clients" className="space-y-6">
               <Card>
-   
-              {clientStatus === ClientStatus.ShowAll    ? (
-                <>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              {(()=>{
+                switch(clientStatus){
+                  case ClientStatus.ShowAll:
+                  return (
+                    <>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
                     <div>
                       <CardTitle>Clientes Registrados</CardTitle>
                       <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
                     </div>
                     <Button onClick={() => {
-                      setFormClientState(FormState.Create);
-                      setClientStatus(ClientStatus.Show);
+                      setClientStatus(ClientStatus.Create)
+                      setFormClientState(FormState.Create)
                     }}>
                       <Plus className="mr-2 h-4 w-4" />
                       Nuevo Cliente
@@ -150,12 +150,39 @@
                   <CardContent>
                     <ClientsTable />
                   </CardContent>
-                </>
-              ) : (
-                <>
-                <DetailClient />
-                </>
-              )}
+                    </>
+                  )
+                  case ClientStatus.Show:
+                    return  (<>
+                   <FormClient />
+                  </>)
+                  case ClientStatus.Create:
+                    return  (
+                    <CreateClient/>
+                    )
+                  default:
+                    return (
+                      <>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <CardTitle>Clientes Registrados</CardTitle>
+                      <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
+                    </div>
+                    <Button onClick={() => {
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nuevo Cliente
+                    </Button>
+                  </CardHeader>
+
+                  <CardContent>
+                    <ClientsTable />
+                  </CardContent>
+                      </>
+                    )
+                }
+              })()}
+   
 
               </Card>
             </TabsContent>

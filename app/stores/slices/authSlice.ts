@@ -28,15 +28,25 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
     try {
       const { user, password } = get()     
       await axios.get("/sanctum/csrf-cookie")
+      console.log(user,password)
+      
       const response = await axios.post("/api/login", { username:user, password:password })
-
+      console.log(response)
+      
       const token = response.data?.token?.toString()
       const userInfo: User = response?.data?.user
-
+      
+      if(!token) {
+        const response = await axios.get('/api/user')
+        const userdata:User = response.data
+        console.log(userdata)
+        set({currentLoginInfoUser:userdata})
+        router.push(userdata.isAdmin ? "/admin/dashboard" : "/client/dashboard")
+      }
+      
       if (token) set({ token, isLogged: true })
       if (userInfo) {
         set({ currentLoginInfoUser: userInfo });
-
         router.push(userInfo.isAdmin ? "/admin/dashboard" : "/client/dashboard")
       }
     } catch (err) {
@@ -44,12 +54,10 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
     }
   },
 
-  logout: () => {
-    set({
-      token: null,
-      currentLoginInfoUser: null,
-      isLogged: false,
-    })
-    localStorage.removeItem("app-storage");
-  }
+logout: async () => {
+  axios.defaults.withCredentials = true;
+  await axios.get('/sanctum/csrf-cookie'); 
+
+  localStorage.removeItem("app-storage");
+}
 })

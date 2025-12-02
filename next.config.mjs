@@ -3,6 +3,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
 
   images: {
     unoptimized: true,

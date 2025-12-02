@@ -1,26 +1,26 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react"
-import axios from '@/lib/axios'
+import { useEffect } from "react"
 import {Spinner} from "@/components/ui/spinner"
-import {Field,FieldGroup,FieldLabel} from "@/components/ui/field"
-import {Input} from "@/components/ui/input"
+import {FieldGroup} from "@/components/ui/field"
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from "@/components/ui/button"
 import { Pen,X,Check} from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppStore } from "@/app/stores/useAppStore"
-import {ClientDetailForm} from "@/components/client-form/client-detail-form"
 import { FormState,ClientStatus} from "@/lib/types"
+import { TextFieldClient } from "./text-field-client"
 
-export function DetailClient(){
-    const {setSelectedTab,selectedTab,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
+export function FormClient(){
+    const {setSelectedTab,selectedTab,clientStatus,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
     
     const goToAddress=()=>{
         setSelectedTab("Address")
     }
     
     useEffect(() => {
-        getClient()
+        if(ClientStatus.Create != clientStatus){
+            getClient()
+        }
     }, [])
     
     return(
@@ -45,46 +45,8 @@ export function DetailClient(){
                         </Avatar>
                         <div className="flex  w-full flex-col">
                         <div className="flex w-full justify-between">
-                        <p className="text-lg">{client?.business_name}</p>
-                        {
-                            formClientState !== FormState.Create &&
-                            (formClientState === FormState.Edit ? (
-                    <div className="flex justify-end gap-2">
-                        {/* Cancelar */}
-                        <Button
-                        variant="ghost"
-                        size="lg"
-                        onClick={() => setFormClientState(FormState.Show)}
-                        className="text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors"
-                        >
-                        <X className="h-4 w-4" />
-                        </Button>
-
-                        {/* Guardar */}
-                        <Button
-                        variant="ghost"
-                        size="lg"
-                        onClick={() => console.log("Guardar cambios")}
-                        className="text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors"
-                        >
-                        <Check className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    ) : (
-                    <Button
-                        onClick={() => {
-                        goToAddress()
-                        setFormClientState(FormState.Edit)
-                        }}
-                        variant="ghost"
-                        size="lg"
-                    >
-                        <Pen className="h-4 w-4" />
-                    </Button>
-                    ))
-                        }
-
-
+                        <p className="text-lg mb-4">{client?.business_name}</p>
+               
                         </div>
                         <div className="flex flex-row justify-between w-full"> 
                             <div className="flex flex-col">
@@ -99,7 +61,8 @@ export function DetailClient(){
                             <p className="text-zinc-500 font-medium">
                                         Número de Teléfono
                                     </p>
-                                    <p className="">
+
+                                      <p className="">
                                         {client?.phone_number}
                                     </p>
                             </div>
@@ -110,14 +73,16 @@ export function DetailClient(){
                                     <p className="">
                                         {client?.user.username}
                                     </p>
+                                    
                             </div>
                             <div className="flex flex-col">
                                 <p className="text-zinc-500 font-medium">
                                         Correo
                                     </p>
-                                    <p className="">
+                                     <p className="">
                                         {client?.user.email}
                                     </p>
+                                    
                             </div>
                         </div>
                         </div>
@@ -127,21 +92,19 @@ export function DetailClient(){
                 </CardContent>
                 </Card>
                 <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mt-3 space-y-6">
-                           {
-                            formClientState !== FormState.Create&&
+                      
                             <TabsList className="mb-3 grid w-full max-w-md grid-cols-3">
                                 <TabsTrigger value="Address" className="gap-2">
                                 Dirección
                                 </TabsTrigger>
-                                <TabsTrigger disabled={FormState.Edit === formClientState} value="Requests" className="gap-2">
+                                <TabsTrigger  value="Requests" className="gap-2">
                                 Solicitudes
                                 </TabsTrigger>
-                                <TabsTrigger disabled={FormState.Edit === formClientState}  value="Jobs" className="gap-2">
+                                <TabsTrigger   value="Jobs" className="gap-2">
                                 Trabajos realizados
                                 </TabsTrigger>
                                 
                             </TabsList>
-                           }
                         <TabsContent value="Requests" className="space-y-6">
                             solcitudes
                         </TabsContent>
@@ -151,7 +114,89 @@ export function DetailClient(){
                              <CardTitle>Información de la dirección de cliente </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ClientDetailForm/>
+                                <div>
+            <FieldGroup>
+                <div className="grid grid-cols-2 gap-4">
+                
+                <TextFieldClient
+                    disabled
+                    id="address"
+                    label="Dirección"
+                    placeholder={client?.customer_address.address}
+                />
+                <TextFieldClient
+                    disabled
+                    id="postalcode"
+                    label="Código postal"
+                    placeholder={client?.customer_address.postal_code}
+                />
+
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                
+                <TextFieldClient
+                    disabled
+                    id="neighborhood"
+                    label="Colonia"
+                    placeholder={client?.customer_address.neighborhood}
+                />
+                
+                <TextFieldClient
+                    disabled
+                    id="municipality"
+                    label="Municipio"
+                    placeholder={client?.customer_address.municipality}
+                />
+                
+                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                
+                <TextFieldClient
+                    disabled
+                    id="locality"
+                    label="Localidad"
+                    placeholder={client?.customer_address.locality_name}
+                />
+                
+                <TextFieldClient
+                    disabled
+                    id="federalEntity"
+                    label="Entidad federal"
+                    placeholder={client?.customer_address.federal_entity}
+                />
+                
+                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                <TextFieldClient
+                    disabled
+                    id="interiornumber"
+                    label="Número interior"
+                    placeholder={client?.customer_address.interior_number}
+                />
+                
+                <TextFieldClient
+                    disabled
+                    id="exteriornumber"
+                    label="Número exterior"
+                    placeholder={client?.customer_address.exterior_number}
+                />
+                
+                </div>
+                <TextFieldClient
+                    disabled
+                    id="beweenstreets"
+                    label="RFC"
+                    placeholder={client?.rfc}
+                />
+                <TextFieldClient
+                    disabled
+                    id="beweenstreets"
+                    label="Entre calles"
+                    placeholder={client?.customer_address.between_streets}
+                />
+                
+            </FieldGroup>
+        </div>
                             </CardContent>
                            </Card>
                         </TabsContent>

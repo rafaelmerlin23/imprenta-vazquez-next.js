@@ -19,15 +19,29 @@ import axios from "@/lib/axios";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import Link from "next/link";
 import { PrintJobRequest, User } from "@/lib/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { paperSizeOptions, paperTypeOptions, requestStatusOptions, typeReceiptOptions, copiesColors, tintColors } from "@/lib/types";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
+	paperSizeOptions,
+	paperTypeOptions,
+	requestStatusOptions,
+	typeReceiptOptions,
+	copiesColors,
+	tintColors,
+} from "@/lib/types";
+import { useAppStore } from "@/app/stores/useAppStore";
 
 const PrintJobRequestEdit = () => {
 	const router = useRouter();
 	const { id } = useParams();
 
 	const [data, setData] = useState<PrintJobRequest | null>(null);
-	const [user, setUser] = useState<User | null>(null);
+	const user: User | null = useAppStore((state) => state.currentLoginInfoUser);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [newFile, setNewFile] = useState<File | null>(null);
 	const [showPreview, setShowPreview] = useState(false);
@@ -65,9 +79,6 @@ const PrintJobRequestEdit = () => {
 			try {
 				setIsLoading(true);
 				const response = await axios.get(`/api/print-jobs/${id}`);
-				const fetchedUser = await axios.get("/api/user");
-				setUser(fetchedUser.data);
-				console.log("Fetched user:", fetchedUser.data);
 				const normalized = normalizePrintRequest(response.data);
 				setData(normalized);
 			} catch (error) {
@@ -102,14 +113,20 @@ const PrintJobRequestEdit = () => {
 	};
 
 	const handleSubmit = async () => {
-		if (!data) return;
+		if (!data) {
+			alert("No hay datos para enviar.");
+			return;
+		}
 
 		const form = new FormData();
+
+		form.append("_method", "PUT");
 
 		if (!user?.customer) {
 			alert("No se encontró el cliente asociado al usuario.");
 			return;
 		}
+
 		form.append("customer_id", user.customer.id);
 		form.append("name", data.name);
 		form.append("type_receipt_id", data.type_receipt_id);
@@ -118,12 +135,10 @@ const PrintJobRequestEdit = () => {
 		form.append("quantity", String(data.quantity));
 		form.append("description", data.description);
 
-		// Agregar nuevo archivo si existe
 		if (newFile) {
 			form.append("file_path", newFile);
 		}
 
-		// Campos condicionales
 		if (data.type_receipt_id === "1") {
 			if (data.folio) form.append("folio", data.folio);
 			if (data.copies_number) form.append("copies_number", data.copies_number);
@@ -133,13 +148,12 @@ const PrintJobRequestEdit = () => {
 			});
 		}
 
-		// Tintas
 		data.tint_colors.forEach((t) => {
 			form.append("tint_colors[]", String(t));
 		});
 
 		try {
-			const response = await axios.put(`api/print-jobs/${id}`, form, {
+			const response = await axios.post(`/api/print-jobs/${id}`, form, {
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},
@@ -160,9 +174,7 @@ const PrintJobRequestEdit = () => {
 	if (!data) {
 		return <div>No se encontró la solicitud.</div>;
 	}
-	console.log("Current data state:", data);
 
-	// Determinar qué archivo mostrar
 	const currentFile = newFile || data.file_path;
 
 	return (
@@ -213,7 +225,7 @@ const PrintJobRequestEdit = () => {
 							<div className="space-y-2">
 								<Label>Nombre de la solicitud</Label>
 								<Input
-									defaultValue={data.name}
+									value={data.name}
 									onChange={(e) => setData({ ...data, name: e.target.value })}
 								/>
 							</div>
@@ -233,11 +245,13 @@ const PrintJobRequestEdit = () => {
 											<SelectValue placeholder="Seleccione una opción" />
 										</SelectTrigger>
 										<SelectContent>
-											{Object.entries(typeReceiptOptions).map(([key, value]) => (
-												<SelectItem key={key} value={key}>
-													{value}
-												</SelectItem>
-											))}
+											{Object.entries(typeReceiptOptions).map(
+												([key, value]) => (
+													<SelectItem key={key} value={key}>
+														{value}
+													</SelectItem>
+												)
+											)}
 										</SelectContent>
 									</Select>
 								</div>
@@ -457,11 +471,19 @@ const PrintJobRequestEdit = () => {
 										id="file_path_edit"
 										type="file"
 										onChange={handleFileChange}
-										className="hidden"
+										className="sr-only peer"
 									/>
 									<Label
 										htmlFor="file_path_edit"
-										className="flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
+										className="
+											flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background
+											px-4 py-2 text-sm
+											hover:bg-accent
+											peer-focus-visible:outline-none
+											peer-focus-visible:ring-2
+											peer-focus-visible:ring-ring
+											peer-focus-visible:ring-offset-2
+										"
 									>
 										<Upload className="h-4 w-4" />
 										{newFile ? "Cambiar archivo" : "Cargar nuevo archivo"}

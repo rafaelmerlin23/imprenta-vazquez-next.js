@@ -17,12 +17,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Eye, File, X } from "lucide-react";
 import axios from "@/lib/axios";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { PrintJobRequest } from "@/lib/types";
+import { PrintJobRequest, User } from "@/lib/types";
 import { typeReceiptOptions, copiesColors, paperSizeOptions, paperTypeOptions, tintColors } from "@/lib/types";
+import { useAppStore } from "@/app/stores/useAppStore";
 
 const PrintJobRequestShow = () => {
 	const router = useRouter();
 	const { id } = useParams();
+    const user: User | null = useAppStore((state) => state.currentLoginInfoUser);
 
 	const [data, setData] = useState<PrintJobRequest | null>(null);
 	const [showPreview, setShowPreview] = useState(false);
@@ -86,25 +88,11 @@ const PrintJobRequestShow = () => {
 		return "archivo";
 	};
 
-	const isImageFile = (filepath: string | File | null) => {
-		const ext = getFileExtension(filepath);
-		return ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext);
-	};
-
-	const isPdfFile = (filepath: string | File | null) => {
-		return getFileExtension(filepath) === "pdf";
-	};
-
-	const getFileUrl = (filepath: string | File | null) => {
-		if (filepath instanceof File) {
-			return URL.createObjectURL(filepath);
-		}
-		if (typeof filepath === "string") {
-			return `${process.env.NEXT_PUBLIC_BACKEND_URL}${filepath}`;
-		}
-		return "";
-	};
-
+	const canEdit = () => {
+		if (!data || !user || !user.customer) return false;
+		const editableStatuses = [1, 2, 5];
+		return editableStatuses.includes(Number(data.status)) && data.customer_id === String(user.customer.id);
+	}
 	if (!data) {
 		return <LoadingSpinner variant="overlay" text="Cargando solicitud..." />;
 	}
@@ -141,12 +129,16 @@ const PrintJobRequestShow = () => {
 								Información registrada
 							</CardDescription>
 						</div>
-						<Button
+						{
+							canEdit() && (
+								<Button
 							variant="default"
 							onClick={() => router.push(`/print-jobs/${id}/edit`)}
 						>
 							Editar
 						</Button>
+							)
+						}
 					</CardHeader>
 
 					<CardContent>

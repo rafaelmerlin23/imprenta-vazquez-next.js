@@ -131,12 +131,21 @@ export type PrintJobRequest = {
   customer?: Customer
 };
 
+export type RequestStatus = {
+  "1": "Solicitada",
+  "2": "Esperando aceptación",
+  "3": "En proceso",
+  "4": "Terminada",
+  "5": "Rechazada",
+}
+
 export const requestStatusOptions: Record<string, string> = {
   "0": "Seleccione una opción",
   "1": "Solicitada",
   "2": "Esperando aceptación",
   "3": "En proceso",
   "4": "Terminada",
+  "5": "Rechazada",
 }
 
 export const paperSizeOptions: Record<string, string> = {

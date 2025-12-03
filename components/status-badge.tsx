@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import type { RequestStatus } from "@/lib/mock-data"
+import { RequestStatus } from "@/lib/types"
 
 interface StatusBadgeProps {
   status: keyof RequestStatus
@@ -7,6 +7,11 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const statusConfig = {
+    "0": {
+      label: "Sin Procesar",
+      variant: "outline" as const,
+      className: "bg-muted text-muted-foreground",
+    },
     "1": {
       label: "Solicitada",
       variant: "secondary" as const,
@@ -27,9 +32,14 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       variant: "default" as const,
       className: "bg-success text-success-foreground",
     },
+    "5": {
+      label: "Rechazada",
+      variant: "destructive" as const,
+      className: "bg-destructive text-destructive-foreground",
+    },
   }
 
-  const config = statusConfig[status]
+  const config = statusConfig[status];
 
   return (
     <Badge variant={config.variant} className={config.className}>

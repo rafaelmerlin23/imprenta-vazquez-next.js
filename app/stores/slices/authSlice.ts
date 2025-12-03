@@ -37,7 +37,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
       if (userInfo) {
         set({ currentLoginInfoUser: userInfo });
 
-        router.push(userInfo.isAdmin ? "/admin/dashboard" : "/client/dashboard")
+        router.push(userInfo.is_admin ? "/admin/dashboard" : "/client/dashboard")
       }
     } catch (err) {
       console.error("Login error", err)

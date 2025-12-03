@@ -1,6 +1,7 @@
 export type UserRole = "admin" | "client"
 
 export type RequestStatus = {
+  "0": "Sin procesar",
   "1": "Solicitada",
   "2": "Esperando aceptación",
   "3": "En proceso",
@@ -28,16 +29,6 @@ export type PaperType = {
 }
 
 export type PaymentMethod = "transferencia" | "efectivo"
-
-export interface User {
-  id: string
-  is_admin: boolean
-  name: string
-  email: string
-  role: UserRole
-  created_at: string
-  customer?: Customer
-}
 
 export interface Address {
   id: string

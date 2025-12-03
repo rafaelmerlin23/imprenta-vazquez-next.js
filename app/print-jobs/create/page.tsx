@@ -127,7 +127,6 @@ const PrintRequestForm = () => {
 	};
 
 	const handleSubmit = async () => {
-		console.log("Submitting form data:", formData);
 		const newErrors: string[] = [];
 		if (!formData.name)
 			newErrors.push("El campo 'Nombre de la solicitud' es obligatorio.");
@@ -213,7 +212,6 @@ const PrintRequestForm = () => {
         }
     } catch (error: any) {
         console.error("Error al enviar la solicitud:", error);
-        console.log(error.response?.data);
     }
 };
 

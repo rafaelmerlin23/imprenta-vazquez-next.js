@@ -4,7 +4,7 @@ import { Client, ClientStatus, ClientData,FormState } from "@/lib/types"
 import { AuthSlice } from "./authSlice"
 
 export interface ClientSlice {
-  clients: Client[] | null
+  clients: Client[] 
   client: ClientData | null
   clientStatus: ClientStatus
   clientIdSelected: number
@@ -15,7 +15,8 @@ export interface ClientSlice {
   setSelectedTab:(selectedTab:string)=> void
   setClientStatus: (status: ClientStatus) => void
   setClientIdSelected: (id: number) => void
-  setClient: (client: ClientData) => void
+  setClient: (client: ClientData) => void,
+  setClients:(clients:Client[])=> void
   setFormClientState: (clientFormState:FormState)=> void
   getClients: () => Promise<void>
   getClient: () => Promise<void>
@@ -27,7 +28,7 @@ export const createClientSlice: StateCreator<
   [],
   ClientSlice
 > = (set, get) => ({
-  clients: null,
+  clients:[],
   client: null,
   clientStatus: ClientStatus.ShowAll,
   clientIdSelected: 0,
@@ -36,20 +37,23 @@ export const createClientSlice: StateCreator<
   detailsOfViewedCustomers: [],
   selectedTab:"Address",
   setSelectedTab:(selectedTab)=>set({selectedTab}),
+  setClients:(clients)=>set({clients}),
   setClientStatus: (status) => set({ clientStatus: status }),
   setClientIdSelected: (id) => set({ clientIdSelected: id }),
   setClient: (client) => set({ client }),
   setFormClientState:(clientFormState)=>set({formClientState:clientFormState}),
   getClients: async () => {
     try {
+      const {clients}= get()
+      if(clients?.length >0){
+        return
+      }
       const token = get().token
-      if (!token) return
-
       const res = await axios.get("/api/customers", {
         headers: { Authorization: `Bearer ${token}` },
       })
-
       set({ clients: res.data.data })
+      console.log("hizo algo")
     } catch (err) {
       console.error("Error loading clients", err)
     }

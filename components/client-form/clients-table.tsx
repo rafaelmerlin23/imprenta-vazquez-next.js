@@ -3,11 +3,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pencil, Trash2,Eye } from "lucide-react"
 import { ClientStatus,FormState } from "@/lib/types"
 import { useAppStore } from "@/app/stores/useAppStore"
+import { useEffect } from "react"
 
 
 export function ClientsTable() {
   const { clients,setClientIdSelected,setClientStatus,setFormClientState} = useAppStore()
-  
+
   return (
     <div className="rounded-md border">
       <Table>

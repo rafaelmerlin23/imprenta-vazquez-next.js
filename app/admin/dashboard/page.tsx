@@ -203,41 +203,68 @@ export default function AdminDashboard() {
 						</Card>
 					</TabsContent>
 
-					<TabsContent value="clients" className="space-y-6">
-						<Card>
-							{clientStatus === ClientStatus.ShowAll ? (
-								<>
-									<CardHeader className="flex flex-row items-center justify-between space-y-0">
-										<div>
-											<CardTitle>Clientes Registrados</CardTitle>
-											<CardDescription>
-												Administra las cuentas de clientes del sistema
-											</CardDescription>
-										</div>
-										<Button
-											onClick={() => {
-												setFormClientState(FormState.Create);
-												setClientStatus(ClientStatus.Show);
-											}}
-										>
-											<Plus className="mr-2 h-4 w-4" />
-											Nuevo Cliente
-										</Button>
-									</CardHeader>
+            <TabsContent value="clients" className="space-y-6">
+              <Card>
+              {(()=>{
+                switch(clientStatus){
+                  case ClientStatus.ShowAll:
+                  return (
+                    <>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <CardTitle>Clientes Registrados</CardTitle>
+                      <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
+                    </div>
+                    <Button onClick={() => {
+                      setClientStatus(ClientStatus.Create)
+                      setFormClientState(FormState.Create)
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nuevo Cliente
+                    </Button>
+                  </CardHeader>
 
-									<CardContent>
-										<ClientsTable />
-									</CardContent>
-								</>
-							) : (
-								<>
-									<DetailClient />
-								</>
-							)}
-						</Card>
-					</TabsContent>
-				</Tabs>
-			</main>
-		</div>
-	);
-}
+                  <CardContent>
+                    <ClientsTable />
+                  </CardContent>
+                    </>
+                  )
+                  case ClientStatus.Show:
+                    return  (<>
+                   <FormClient />
+                  </>)
+                  case ClientStatus.Create:
+                    return  (
+                    <CreateClient/>
+                    )
+                  default:
+                    return (
+                      <>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <CardTitle>Clientes Registrados</CardTitle>
+                      <CardDescription>Administra las cuentas de clientes del sistema</CardDescription>
+                    </div>
+                    <Button onClick={() => {
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nuevo Cliente
+                    </Button>
+                  </CardHeader>
+
+                  <CardContent>
+                    <ClientsTable />
+                  </CardContent>
+                      </>
+                    )
+                }
+              })()}
+   
+
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    )
+  }

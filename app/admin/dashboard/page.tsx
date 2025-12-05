@@ -9,18 +9,21 @@
   import { mockRequests, mockUsers } from "@/lib/mock-data"
   import { RequestsTable } from "@/components/requests-table"
   import { ClientsTable } from "@/components/client-form/clients-table"
-  import {Client,ClientStatus,FormState} from "@/lib/types"
-  import axios from '@/lib/axios'
+  import {Client,ClientStatus,FormState, PrintRequest, requestStatusOptions} from "@/lib/types"
+ 
   import {FormClient} from "@/components/client-form/form-client"
   import {CreateClient} from "@/components/client-form/add-client"
   import {useAppStore } from "@/app/stores//useAppStore"
+  import { useRouter } from "next/navigation"
+import LoadingSpinner from "@/components/ui/loading-spinner"
 
   export default function AdminDashboard() {
-    const [requests] = useState(mockRequests)
-    const {logout,clients,getClients,clientStatus,setClientStatus,setFormClientState} = useAppStore()
-
+    const {token,requests,getRequests,logout,clients,getClients,clientStatus,setClientStatus,setFormClientState} = useAppStore()
+    const router = useRouter();
+    const [isLoading,setIsLoading] = useState<boolean>(true)
+    
     const closeSession = ()=>{
-      logout()
+      logout(router);
     }
 
 
@@ -48,6 +51,15 @@
     useEffect(()=>{
         getClients()
     },[])
+
+    useEffect(()=>{
+      getRequests(setIsLoading)
+    },
+    [])
+
+    if (isLoading) {
+        return <LoadingSpinner />;
+      }
 
 
     return (
@@ -90,27 +102,27 @@
                 <Card>
                   <CardHeader className="pb-3">
                     <CardDescription>Solicitadas</CardDescription>
-                    <CardTitle className="text-3xl">{requests.filter((r) => r.status === "solicitada").length}</CardTitle>
+                    <CardTitle className="text-3xl">{requests.filter((r:PrintRequest) => r.status == "1").length}</CardTitle>
                   </CardHeader>
                 </Card>
                 <Card>
                   <CardHeader className="pb-3">
                     <CardDescription>Esperando Aceptación</CardDescription>
                     <CardTitle className="text-3xl">
-                      {requests.filter((r) => r.status === "esperando_aceptacion").length}
+                      {requests.filter((r:any) => r.status == "2").length}
                     </CardTitle>
                   </CardHeader>
                 </Card>
                 <Card>
                   <CardHeader className="pb-3">
                     <CardDescription>En Proceso</CardDescription>
-                    <CardTitle className="text-3xl">{requests.filter((r) => r.status === "en_proceso").length}</CardTitle>
+                    <CardTitle className="text-3xl">{requests.filter((r:any) => r.status == "3").length}</CardTitle>
                   </CardHeader>
                 </Card>
                 <Card>
                   <CardHeader className="pb-3">
                     <CardDescription>Terminadas</CardDescription>
-                    <CardTitle className="text-3xl">{requests.filter((r) => r.status === "terminada").length}</CardTitle>
+                    <CardTitle className="text-3xl">{requests.filter((r:any) => r.status == "4").length}</CardTitle>
                   </CardHeader>
                 </Card>
               </div>

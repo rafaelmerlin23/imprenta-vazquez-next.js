@@ -47,7 +47,7 @@ export function RequestsTable({ requests, isAdmin }: RequestsTableProps) {
         setIsDeleting(true);
         try {
             const response = axios.delete(
-				`${process.env.NEXT_PUBLIC_BACKEND_URL}api/print-jobs/${selectedId}`
+				`api/print-jobs/${selectedId}`
 			);
 
             if ((await response).status !== 200) {

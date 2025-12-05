@@ -1,15 +1,90 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pencil, Trash2,Eye } from "lucide-react"
-import { ClientStatus,FormState } from "@/lib/types"
+import { ClientStatus,FormState,Client } from "@/lib/types"
 import { useAppStore } from "@/app/stores/useAppStore"
-import { useEffect } from "react"
-
+import { useEffect, useState } from "react"
+import { ErrorDialog } from "../error-dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+ import axios from '@/lib/axios'
 
 export function ClientsTable() {
-  const { clients,setClientIdSelected,setClientStatus,setFormClientState} = useAppStore()
+  const { clients,setClientIdSelected,setClientStatus,setFormClientState,deleteClient} = useAppStore()
+  const [isDeleteDialogOpen,setIsDeleteDialogOpen]= useState<boolean>(false)
+  const [clientSelected,setClientSelected] = useState<Client | null>(null)
+  const [isDeleting,setIsDeleting] = useState<boolean>(false)
+  
+  const [errorDialog,setErrorDialog] = useState<string >("")
+  const [isOpenErrorDialog,setIsOpenErrorDialog] = useState<boolean>(false)
+  
+  const handleConfirmDelete =async ()=>{
+    setIsDeleting(true);
+    const response = await axios.delete(`api/customers/${clientSelected?.id}`)
+    .then(
+      ()=>{
+        setClientSelected(null);
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
+        if(clientSelected != null){
+          deleteClient(clientSelected)
+        }
+      }
+    ).catch((error)=>{
+      setErrorDialog("Error al eliminar el cliente")
+      setIsDeleteDialogOpen(false);
+      setIsOpenErrorDialog(true);
+      console.log(error);
+    }) 
+  } 
 
   return (
+    <>
+    <ErrorDialog
+    description={errorDialog}
+    isOpen = {isOpenErrorDialog}
+    onClose={()=>{
+      setIsOpenErrorDialog(false)
+      setErrorDialog("");
+      setIsDeleting(false);
+    }}
+    title="Error"
+
+    />
+    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle
+                        >¿Eliminar cliente?</DialogTitle>
+                        <DialogDescription>
+                            Esta acción no se puede deshacer. el cliente {clientSelected?.business_name} será eliminada
+                            permanentemente del sistema.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={()=> setIsDeleteDialogOpen(false)}
+                            disabled={isDeleting}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? "Eliminando..." : "Eliminar"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
     <div className="rounded-md border">
       <Table>
         <TableHeader>
@@ -42,7 +117,10 @@ export function ClientsTable() {
                     <Button onClick={()=> setFormClientState(FormState.Edit)} variant="ghost" size="sm">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button onClick={()=>{}} variant="ghost" size="sm">
+                    <Button onClick={()=>{
+                      setClientSelected(client);
+                      setIsDeleteDialogOpen(true);
+                    }} variant="ghost" size="sm">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <Button onClick={()=> {
@@ -60,5 +138,6 @@ export function ClientsTable() {
         </TableBody>
       </Table>
     </div>
+            </>
   )
 }

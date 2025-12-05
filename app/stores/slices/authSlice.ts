@@ -12,7 +12,7 @@ export interface AuthSlice {
   setUser: (user: string) => void
   setPassword: (password: string) => void
   login: (router: AppRouterInstance) => Promise<void>
-  logout: () => void
+  logout: (router: AppRouterInstance) => Promise<void>
 }
 
 export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
@@ -36,28 +36,33 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
       const token = response.data?.token?.toString()
       const userInfo: User = response?.data?.user
       
-      if(!token) {
-        const response = await axios.get('/api/user')
-        const userdata:User = response.data
-        console.log(userdata)
-        set({currentLoginInfoUser:userdata})
-        router.push(userdata.isAdmin ? "/admin/dashboard" : "/client/dashboard")
+      if (token) {
+        set({ token, isLogged: true })
+        
       }
-      
-      if (token) set({ token, isLogged: true })
-      if (userInfo) {
+
+      if (token && userInfo.isAdmin) {
         set({ currentLoginInfoUser: userInfo });
-        router.push(userInfo.isAdmin ? "/admin/dashboard" : "/client/dashboard")
+        router.push("/admin/dashboard")
       }
+
+      if(token && !userInfo.isAdmin){
+        const response = await axios.get("/api/user", {
+        headers: { Authorization: `Bearer ${token}` },
+        }) 
+        set({currentLoginInfoUser:response.data})
+        router.push("/client/dashboard")
+      }
+
     } catch (err) {
       console.error("Login error", err)
     }
   },
 
-logout: async () => {
-  axios.defaults.withCredentials = true;
-  await axios.get('/sanctum/csrf-cookie'); 
-
+logout: async (router) => {
+  set({currentLoginInfoUser:null})
+  set({token:null})
+  set({isLogged:false})
   localStorage.removeItem("app-storage");
 }
 })

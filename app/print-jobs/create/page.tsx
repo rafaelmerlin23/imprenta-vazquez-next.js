@@ -27,11 +27,13 @@ import axios from "@/lib/axios";
 import { User } from "@/lib/mock-data";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { PrintJobRequest as PrintRequest, paperSizeOptions, paperTypeOptions, typeReceiptOptions, copiesColors, tintColors } from "@/lib/types";
+import { useAppStore } from "@/app/stores/useAppStore";
 
 const PrintRequestForm = () => {
 	const router = useRouter();
-	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const {logout,token,currentLoginInfoUser} = useAppStore()
+
 	const [formData, setFormData] = useState<PrintRequest>({
 		id: "",
 		customer_id: "",
@@ -57,26 +59,11 @@ const PrintRequestForm = () => {
 	const [errors, setErrors] = useState<string[]>([]);
 
 	useEffect(() => {
-		const fetchUser = async () => {
-		try {
-			setIsLoading(true);
-			const response = await axios.get('api/user',
-				{
-					withCredentials: true,
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("token")}`,
-					},
-				}
-			);
-			setUser(response.data);
-		} catch (error) {
-			console.error("Error fetching print job requests:", error);
-		} finally {
+		if(currentLoginInfoUser != null && token != null){
 			setIsLoading(false);
 		}
-	};
-		fetchUser();
-	}, []);
+		
+	}, [currentLoginInfoUser,token]);
 
 	const handleCheckboxChange = (
 		field: "copies_colors" | "tint_colors",
@@ -169,13 +156,13 @@ const PrintRequestForm = () => {
 		setErrors(newErrors);
 
 		if (newErrors.length > 0) return;
-
-		if (!user?.customer) {
+		console.log("info del cliente",currentLoginInfoUser)
+		if (!currentLoginInfoUser?.customer) {
 			return newErrors.push("No se pudo obtener la información del cliente.");
 		}
     const form = new FormData();
 
-	form.append("customer_id", user.customer.id);
+	form.append("customer_id", currentLoginInfoUser.customer.id);
     form.append("name", formData.name);
     form.append("type_receipt_id", formData.type_receipt_id);
     form.append("paper_size", formData.paper_size);
@@ -199,12 +186,10 @@ const PrintRequestForm = () => {
 
     try {
         const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/print-jobs`,
+            "/api/print-jobs",
             form,
             {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+                 headers: { Authorization: `Bearer ${token}` },
             }
         );
 

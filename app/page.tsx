@@ -18,7 +18,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if(isLogged){
-      currentLoginInfoUser?.is_admin ? router.push("/admin/dashboard") : router.push("/client/dashboard")
+      currentLoginInfoUser?.isAdmin ? router.push("/admin/dashboard") : router.push("/client/dashboard")
     }
   }, [isLogged])
 
@@ -52,7 +52,7 @@ export default function HomePage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Correo electrónico</Label>
+                  <Label htmlFor="username">Nombre de usuario</Label>
                   <Input
                     id="text"
                     type="text"

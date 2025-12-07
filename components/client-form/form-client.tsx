@@ -71,7 +71,7 @@ export function FormClient(){
                                         Nombre de usuario
                                     </p>
                                     <p className="">
-                                        {client?.user.username}
+                                        {client?.user.name}
                                     </p>
                                     
                             </div>

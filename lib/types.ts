@@ -1,7 +1,5 @@
 export type UserRole = "admin" | "client"
 
-export type PaymentMethod = "transferencia" | "efectivo"
-
 export interface Client {
   id: number
   business_name: string
@@ -45,7 +43,7 @@ export interface CustomerAddress {
   deleted_at: any
 }
 
-export interface User {
+export interface UserApi {
   id: string
   is_admin: boolean
   name: string
@@ -55,6 +53,35 @@ export interface User {
   created_at: string
   updated_at: string
   deleted_at: any
+  customer: Customer | null
+}
+
+
+export function mapUser(api: UserApi): User {
+  return {
+    id: api.id,
+    isAdmin: api.is_admin,
+    name: api.name,
+    email: api.email,
+    role: api.role,
+    emailVerifiedAt: api.email_verified_at,
+    createdAt: api.created_at,
+    updatedAt: api.updated_at,
+    deletedAt: api.deleted_at,
+    customer: api.customer,
+  }
+}
+
+export interface User {
+  id: string
+  isAdmin: boolean
+  name: string
+  email: string
+  role: UserRole
+  emailVerifiedAt: any
+  createdAt: string
+  updatedAt: string
+  deletedAt: any
   customer: Customer | null
 }
 
@@ -123,24 +150,24 @@ export type PrintJobRequest = {
   file_path: File
   description: string
   status: keyof typeof requestStatusOptions
-  estimated_time?: string
-  quotation?: number
+  estimated_date?: string
+  price?: number
   payment_method?: PaymentMethod
-  is_paid_in_full?: boolean
-  advance?: number
-  payment_proof?: string
+  is_paid?: boolean
   created_at: string
   updated_at: string
   customer?: Customer
+  payments?: PrintJobPayment[];
 };
 
-export type RequestStatus = {
-  "1": "Solicitada",
-  "2": "Esperando aceptación",
-  "3": "En proceso",
-  "4": "Terminada",
-  "5": "Rechazada",
-}
+export type RequestStatus = 
+  | 'pending'
+  | 'waiting_acceptance'
+  | 'declined'
+  | 'accepted'
+  | 'in_progress'
+  | 'completed'
+  | 'rejected';
 
 export const requestStatusOptions: Record<string, string> = {
   "0": "Seleccione una opción",
@@ -192,4 +219,35 @@ export const tintColors = {
   5: "Rojo",
   6: "Sepia",
   7: "Otro",
+};
+
+export const requestStatusLabels: Record<RequestStatus, string> = {
+  pending: 'Pendiente',
+  waiting_acceptance: 'Esperando aceptación',
+  accepted: 'Aceptada',
+  in_progress: 'En proceso',
+  completed: 'Completada',
+  rejected: 'Rechazada',
+  declined: 'Denegada',
+};
+
+
+// Interface para pagos
+export interface PrintJobPayment {
+  id: string;
+  print_job_request_id: string;
+  payment_method: PaymentMethod;
+  amount: number;
+  paid_at: string;
+  file_path?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PaymentMethod = 1 | 2 | 3;
+
+export const paymentMethodLabels: Record<PaymentMethod, string> = {
+  1: 'Pago parcial por transferencia',
+  2: 'Pago anticipado por transferencia',
+  3: 'Pago en efectivo (en sucursal)',
 };

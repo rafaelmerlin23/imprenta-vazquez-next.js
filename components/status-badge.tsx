@@ -1,45 +1,55 @@
 import { Badge } from "@/components/ui/badge"
-import { RequestStatus } from "@/lib/types"
+import { useAppStore } from "@/app/stores/useAppStore"
 
 interface StatusBadgeProps {
-  status: keyof RequestStatus
+  status: string
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { currentLoginInfoUser: user } = useAppStore()
   const statusConfig = {
-    "0": {
-      label: "Sin Procesar",
+    "pending": {
+      label: "Pendiente",
       variant: "outline" as const,
-      className: "bg-muted text-muted-foreground",
+      className: "bg-gray-100 text-gray-700 border-gray-300",
     },
-    "1": {
-      label: "Solicitada",
+    "waiting_acceptance": {
+      label: !user?.isAdmin ? "Esperando aceptación" : "Solicitada",
       variant: "secondary" as const,
-      className: "bg-secondary text-secondary-foreground",
+      className: "bg-blue-100 text-blue-700 border-blue-300",
     },
-    "2": {
-      label: "Esperando Aceptación",
+    "accepted": {
+      label: "Aceptada",
       variant: "default" as const,
-      className: "bg-default text-default-foreground",
+      className: "bg-green-100 text-green-700 border-green-300",
     },
-    "3": {
-      label: "En Proceso",
+    "in_progress": {
+      label: "En proceso",
       variant: "default" as const,
-      className: "bg-warning text-warning-foreground",
+      className: "bg-yellow-100 text-yellow-700 border-yellow-300",
     },
-    "4": {
-      label: "Terminada",
+    "completed": {
+      label: "Completada",
       variant: "default" as const,
-      className: "bg-success text-success-foreground",
+      className: "bg-emerald-100 text-emerald-700 border-emerald-300",
     },
-    "5": {
+    "rejected": {
       label: "Rechazada",
       variant: "destructive" as const,
-      className: "bg-destructive text-destructive-foreground",
+      className: "bg-red-100 text-red-700 border-red-300",
+    },
+    "declined": {
+      label: "Denegada",
+      variant: "destructive" as const,
+      className: "bg-red-100 text-red-700 border-red-300",
     },
   }
 
-  const config = statusConfig[status];
+  const config = statusConfig[status as keyof typeof statusConfig] || {
+    label: "Desconocido",
+    variant: "outline" as const,
+    className: "bg-gray-100 text-gray-700",
+  };
 
   return (
     <Badge variant={config.variant} className={config.className}>

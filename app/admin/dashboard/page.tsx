@@ -1,41 +1,29 @@
-"use client";
+  "use client"
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Users, FileText, Plus } from "lucide-react";
-import { RequestsTable } from "@/components/requests-table";
-import { ClientsTable } from "@/components/client-form/clients-table";
-import { ClientStatus, FormState, User, PrintJobRequest } from "@/lib/types";
-import axios from "@/lib/axios";
-import { DetailClient } from "@/components/client-form/detail-client";
-import { useAppStore } from "@/app/stores//useAppStore";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+  import { useEffect, useState } from "react"
+  import Link from "next/link"
+  import { Button } from "@/components/ui/button"
+  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+  import { LogOut, Users, FileText, Plus } from "lucide-react"
+  import { RequestsTable } from "@/components/requests-table"
+  import { ClientsTable } from "@/components/client-form/clients-table"
+  import {ClientStatus,FormState, PrintRequest} from "@/lib/types"
+  import {FormClient} from "@/components/client-form/form-client"
+  import {CreateClient} from "@/components/client-form/add-client"
+  import {useAppStore } from "@/app/stores//useAppStore"
+  import { useRouter } from "next/navigation"
+import LoadingSpinner from "@/components/ui/loading-spinner"
 
-export default function AdminDashboard() {
-	const [loading, setLoading] = useState(false);
-	const [requests, setRequests] = useState<PrintJobRequest[]>();
-  const [user, setUser] = useState<User>();
-	const {
-		logout,
-		clients,
-		getClients,
-		clientStatus,
-		setClientStatus,
-		setFormClientState,
-	} = useAppStore();
+  export default function AdminDashboard() {
+    const {token,requests,getRequests,logout,clients,getClients,clientStatus,setClientStatus,setFormClientState} = useAppStore()
+    const router = useRouter();
+    const [isLoading,setIsLoading] = useState<boolean>(true)
+    
+    const closeSession = ()=>{
+      logout(router);
+    }
 
-	const closeSession = () => {
-		logout();
-	};
 
 	useEffect(() => {
 		const handlePopState = () => {
@@ -58,60 +46,19 @@ export default function AdminDashboard() {
 		}
 	}, [clientStatus]);
 
-	useEffect(() => {
-		if (clients === null) {
-			getClients();
-		}
-	}, []);
+    useEffect(()=>{
+        getClients()
+    },[])
 
-	useEffect(() => {
-		const fetchRequests = async () => {
-			setLoading(true);
-			try {
-				const response = await axios.get("/api/print-jobs");
-				setRequests(response.data);
-			} catch (error) {
-				console.error("Error fetching requests:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
+    useEffect(()=>{
+      getRequests(setIsLoading)
+    },
+    [])
 
-		const fetchUser = async () => {
-			try {
-				setLoading(true);
-				const response = await axios.get("/api/user");
-        setUser(response.data);
-			} catch (error) {
-				console.error("Error fetching user:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
+    if (isLoading) {
+        return <LoadingSpinner />;
+      }
 
-		fetchRequests();
-		fetchUser();
-	}, []);
-
-	if (loading) {
-		return <LoadingSpinner />;
-	}
-
-	if (!requests) {
-		return (
-			<div className="text-center text-muted-foreground">
-				No se encontraron solicitudes
-			</div>
-		);
-	}
-
-  if (!user) {
-    return (
-      <div className="text-center text-muted-foreground">
-        No se encontró información del usuario
-      </div>
-    );
-  }
 
 	return (
 		<div className="min-h-screen bg-background">
@@ -150,45 +97,35 @@ export default function AdminDashboard() {
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="requests" className="space-y-6">
-						<div className="grid gap-4 sm:grid-cols-4 grid-cols-2">
-							<Card>
-								<CardHeader className="pb-3">
-									<CardDescription>Solicitadas</CardDescription>
-									<CardTitle className="text-3xl">
-										{requests.filter((r) => r.status == "1").length}
-									</CardTitle>
-								</CardHeader>
-							</Card>
-							<Card>
-								<CardHeader className="pb-3">
-									<CardDescription>Esperando Aceptación</CardDescription>
-									<CardTitle className="text-3xl">
-										{
-											requests.filter(
-												(r) => r.status == "2"
-											).length
-										}
-									</CardTitle>
-								</CardHeader>
-							</Card>
-							<Card>
-								<CardHeader className="pb-3">
-									<CardDescription>En Proceso</CardDescription>
-									<CardTitle className="text-3xl">
-										{requests.filter((r) => r.status == "3").length}
-									</CardTitle>
-								</CardHeader>
-							</Card>
-							<Card>
-								<CardHeader className="pb-3">
-									<CardDescription>Terminadas</CardDescription>
-									<CardTitle className="text-3xl">
-										{requests.filter((r) => r.status == "4").length}
-									</CardTitle>
-								</CardHeader>
-							</Card>
-						</div>
+            <TabsContent value="requests" className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Solicitadas</CardDescription>
+                    <CardTitle className="text-3xl">{requests.filter((r:PrintRequest) => r.status == "1").length}</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Esperando Aceptación</CardDescription>
+                    <CardTitle className="text-3xl">
+                      {requests.filter((r:any) => r.status == "2").length}
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>En Proceso</CardDescription>
+                    <CardTitle className="text-3xl">{requests.filter((r:any) => r.status == "3").length}</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Terminadas</CardDescription>
+                    <CardTitle className="text-3xl">{requests.filter((r:any) => r.status == "4").length}</CardTitle>
+                  </CardHeader>
+                </Card>
+              </div>
 
 						<Card>
 							<CardHeader>
@@ -198,7 +135,7 @@ export default function AdminDashboard() {
 								</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<RequestsTable requests={requests} user={user} isAdmin />
+								<RequestsTable requests={requests} />
 							</CardContent>
 						</Card>
 					</TabsContent>

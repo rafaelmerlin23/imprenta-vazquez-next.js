@@ -1,3 +1,4 @@
+import { TypeReceipt } from "@/lib/types";
 export const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -16,4 +17,10 @@ export const getFileName = (filepath: string | File | null) => {
         return filepath.name || "archivo";
     }
     return "archivo";
+};
+
+export const isPrintingType = (typeReceipt: string, typeReceipts: TypeReceipt[]): boolean => {
+    if (!typeReceipt) return false;
+    const selectedType = typeReceipts.find((tr) => tr.id === typeReceipt);
+    return selectedType?.receipt_category === "Impresión";
 };

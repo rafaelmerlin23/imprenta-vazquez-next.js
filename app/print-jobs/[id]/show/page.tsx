@@ -41,7 +41,6 @@ import {
 	paymentMethodLabels,
 } from "@/lib/types";
 import {
-	typeReceiptOptions,
 	copiesColors,
 	paperSizeOptions,
 	paperTypeOptions,
@@ -102,6 +101,7 @@ const PrintJobRequestShow = () => {
 			payment_method: data.payment_method ?? undefined,
 			reason_rejection: data.reason_rejection ?? undefined,
 			payments: data.payments ?? [],
+			type_receipt: data.type_receipt ?? undefined,
 		};
 	};
 
@@ -192,7 +192,6 @@ const PrintJobRequestShow = () => {
 					"Content-Type": "multipart/form-data",
 				},
 			});
-			console.log("Respuesta del servidor:", response);
 
 			if (response.status === 201) {
 				setShowPaymentModal(false);
@@ -223,7 +222,7 @@ const PrintJobRequestShow = () => {
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => router.push("/client/dashboard")}
+							onClick={() => router.push(user?.isAdmin ? "/admin/dashboard" : "/client/dashboard")}
 							className="rounded-full"
 						>
 							<ArrowLeft className="h-5 w-5" />
@@ -302,7 +301,7 @@ const PrintJobRequestShow = () => {
 											Tipo de solicitud
 										</Label>
 										<Input
-											value={typeReceiptOptions[data.type_receipt_id]}
+											value={data.type_receipt?.name}
 											disabled
 											className="bg-slate-50 font-medium"
 										/>
@@ -314,14 +313,14 @@ const PrintJobRequestShow = () => {
 											Cantidad
 										</Label>
 										<Input
-											value={`${data.quantity} unidad(es)`}
+											value={`${data.quantity > 1 ? `${data.quantity} unidades` : `${data.quantity} unidad`}`}
 											disabled
 											className="bg-slate-50 font-medium"
 										/>
 									</div>
 								</div>
 
-								{data.type_receipt_id === "1" && (
+								{data.type_receipt?.receipt_category === "Impresión" && (
 									<>
 										<Separator />
 										<div className="grid gap-4 md:grid-cols-2">

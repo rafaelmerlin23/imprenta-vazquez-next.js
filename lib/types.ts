@@ -113,7 +113,7 @@ export interface PrintRequest {
   id: string
   customer_id: string
   name: string
-  type_receipt_id: keyof typeof typeReceiptOptions
+  type_receipt_id: string
   paper_size: keyof typeof paperSizeOptions
   paper_type: keyof typeof paperTypeOptions
   quantity: number
@@ -133,13 +133,14 @@ export interface PrintRequest {
   created_at: string
   updated_at: string
   customer?: Customer
+  type_receipt?: TypeReceipt;
 }
 
 export type PrintJobRequest = {
   id: string
   customer_id: string
   name: string
-  type_receipt_id: keyof typeof typeReceiptOptions
+  type_receipt_id: string
   paper_size: keyof typeof paperSizeOptions
   paper_type: keyof typeof paperTypeOptions
   quantity: number
@@ -159,6 +160,7 @@ export type PrintJobRequest = {
   reason_rejection?: string
   customer?: Customer
   payments?: PrintJobPayment[];
+  type_receipt?: TypeReceipt;
 };
 
 export type RequestStatus = 
@@ -197,12 +199,6 @@ export const paperTypeOptions: Record<string, string> = {
   "1": 'Papel bond',
   "2": 'Papel autocopiante',
   "3": 'Cartulina',
-}
-
-export const typeReceiptOptions: Record<string, string> = {
-  "0": "Seleccione una opción",
-  "1": "Impresión",
-  "2": "Varios",
 }
 
 export const copiesColors = {
@@ -251,4 +247,13 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
   1: 'Pago parcial por transferencia',
   2: 'Pago anticipado por transferencia',
   3: 'Pago en efectivo (en sucursal)',
+};
+
+export type TypeReceipt = {
+  id: string;
+  name: string;
+  description: string;
+  receipt_category: string;
+  created_at: string;
+  updated_at: string;
 };

@@ -25,13 +25,22 @@ import { FileText, Upload } from "lucide-react";
 import { ErrorBadge } from "@/components/error-badge";
 import axios from "@/lib/axios";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { PrintJobRequest as PrintRequest, paperSizeOptions, paperTypeOptions, typeReceiptOptions, copiesColors, tintColors } from "@/lib/types";
+import {
+	PrintJobRequest as PrintRequest,
+	paperSizeOptions,
+	paperTypeOptions,
+	copiesColors,
+	tintColors,
+	TypeReceipt,
+} from "@/lib/types";
 import { useAppStore } from "@/app/stores/useAppStore";
+import { isPrintingType } from "@/lib/helpers";
 
 const PrintRequestForm = () => {
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(true);
-	const {logout,token,currentLoginInfoUser} = useAppStore()
+	const [typeReceipts, setTypeReceipts] = useState<TypeReceipt[]>([]);
+	const { logout, token, currentLoginInfoUser } = useAppStore();
 
 	const [formData, setFormData] = useState<PrintRequest>({
 		id: "",
@@ -58,10 +67,23 @@ const PrintRequestForm = () => {
 	const [errors, setErrors] = useState<string[]>([]);
 
 	useEffect(() => {
-		if(currentLoginInfoUser != null && token != null){
+		if (currentLoginInfoUser != null && token != null) {
 			setIsLoading(false);
 		}
-	}, [currentLoginInfoUser,token]);
+	}, [currentLoginInfoUser, token]);
+
+	useEffect(() => {
+		const fetchTypeReceipts = async () => {
+			try {
+				const response = await axios.get("/api/type-receipts");
+				setTypeReceipts(response.data.data);
+			} catch (error) {
+				console.error("Error fetching type receipts:", error);
+			}
+		};
+
+		fetchTypeReceipts();
+	}, []);
 
 	const handleCheckboxChange = (
 		field: "copies_colors" | "tint_colors",
@@ -127,8 +149,8 @@ const PrintRequestForm = () => {
 			newErrors.push("El campo 'Documento de impresión' es obligatorio.");
 		if (!formData.description)
 			newErrors.push("El campo 'Descripción' es obligatorio.");
-		
-		if (formData.type_receipt_id === "1") {
+
+		if (isPrintingType(formData.type_receipt_id, typeReceipts)) {
 			if (!formData.copies_number || parseInt(formData.copies_number) <= 0) {
 				newErrors.push(
 					"El campo 'Número de copias' es obligatorio y debe ser mayor a cero."
@@ -148,11 +170,11 @@ const PrintRequestForm = () => {
 				);
 			}
 		}
-		
+
 		if (formData.tint_colors?.length === 0) {
 			newErrors.push("Debes seleccionar al menos un color de tinta.");
 		}
-		
+
 		setErrors(newErrors);
 
 		if (newErrors.length > 0) return;
@@ -172,7 +194,7 @@ const PrintRequestForm = () => {
 		form.append("description", formData.description);
 		form.append("file_path", formData.file_path);
 
-		if (formData.type_receipt_id === "1") {
+		if (isPrintingType(formData.type_receipt_id, typeReceipts)) {
 			if (formData.folio) {
 				form.append("folio", formData.folio);
 			}
@@ -190,16 +212,12 @@ const PrintRequestForm = () => {
 		});
 
 		try {
-			const response = await axios.post(
-				"/api/print-jobs",
-				form,
-				{
-					headers: { 
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "multipart/form-data"
-					},
-				}
-			);
+			const response = await axios.post("/api/print-jobs", form, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "multipart/form-data",
+				},
+			});
 
 			if (response.status === 201) {
 				router.push("/client/dashboard");
@@ -207,12 +225,16 @@ const PrintRequestForm = () => {
 		} catch (error: any) {
 			console.error("Error al enviar la solicitud:", error);
 			if (error.response?.data?.errors) {
-				const serverErrors = Object.values(error.response.data.errors).flat() as string[];
+				const serverErrors = Object.values(
+					error.response.data.errors
+				).flat() as string[];
 				setErrors(serverErrors);
 			} else if (error.response?.data?.message) {
 				setErrors([error.response.data.message]);
 			} else {
-				setErrors(["Error al crear la solicitud. Por favor, intente de nuevo."]);
+				setErrors([
+					"Error al crear la solicitud. Por favor, intente de nuevo.",
+				]);
 			}
 		}
 	};
@@ -258,7 +280,9 @@ const PrintRequestForm = () => {
 							</p>
 						</div>
 					</div>
-					<Button variant="outline" onClick={logout}>Cerrar Sesión</Button>
+					<Button variant="outline" onClick={logout}>
+						Cerrar Sesión
+					</Button>
 				</div>
 			</header>
 
@@ -327,9 +351,9 @@ const PrintRequestForm = () => {
 											<SelectValue placeholder="Seleccione una opción" />
 										</SelectTrigger>
 										<SelectContent>
-											{Object.entries(typeReceiptOptions).map(([key, value]) => (
-												<SelectItem key={key} value={key}>
-													{value}
+											{typeReceipts.map((tr) => (
+												<SelectItem key={tr.id} value={tr.id}>
+													{tr.name}
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -357,7 +381,7 @@ const PrintRequestForm = () => {
 								</div>
 							</div>
 
-							{formData.type_receipt_id === "1" && (
+							{isPrintingType(formData.type_receipt_id, typeReceipts) && (
 								<>
 									<div className="grid gap-6 md:grid-cols-2">
 										<div className="space-y-2">
@@ -404,7 +428,9 @@ const PrintRequestForm = () => {
 											<span className="text-red-500">*</span>
 										</Label>
 										{colorErrors.copies_colors && (
-											<p className="text-sm text-red-500">{colorErrors.copies_colors}</p>
+											<p className="text-sm text-red-500">
+												{colorErrors.copies_colors}
+											</p>
 										)}
 										<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
 											{Object.entries(copiesColors).map(([key, value]) => (
@@ -442,7 +468,10 @@ const PrintRequestForm = () => {
 									<Select
 										value={formData.paper_size}
 										onValueChange={(value) =>
-											setFormData({ ...formData, paper_size: value as PrintRequest['paper_size'] })
+											setFormData({
+												...formData,
+												paper_size: value as PrintRequest["paper_size"],
+											})
 										}
 										required
 									>
@@ -466,7 +495,10 @@ const PrintRequestForm = () => {
 									<Select
 										value={formData.paper_type}
 										onValueChange={(value) =>
-											setFormData({ ...formData, paper_type: value as PrintRequest['paper_type'] })
+											setFormData({
+												...formData,
+												paper_type: value as PrintRequest["paper_type"],
+											})
 										}
 										required
 									>
@@ -488,28 +520,21 @@ const PrintRequestForm = () => {
 								<Label htmlFor="file_path">
 									Documento de impresión <span className="text-red-500">*</span>
 								</Label>
-								<div className="flex items-center gap-4">
-									<Input
-										id="file_path"
-										type="file"
-										accept=".pdf"
-										onChange={handleFileChange}
-										className="hidden"
-										required
-									/>
-									<Label
-										htmlFor="file_path"
-										className="flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
-									>
-										<Upload className="h-4 w-4" />
-										Selecciona un archivo (PDF)
-									</Label>
-									{formData.file_path && formData.file_path.size > 0 && (
-										<span className="text-sm text-muted-foreground">
-											{formData.file_path.name}
-										</span>
-									)}
-								</div>
+								<Input
+									id="file_path"
+									type="file"
+									accept=".pdf"
+									onChange={handleFileChange}
+									disabled={false}
+								/>
+								{formData.file_path && (
+									<p className="text-xs text-muted-foreground">
+										Archivo: {formData.file_path.name}
+									</p>
+								)}
+								<p className="text-xs text-muted-foreground">
+									Adjunta la captura o comprobante de tu transferencia
+								</p>
 							</div>
 
 							<div className="space-y-2">
@@ -535,7 +560,9 @@ const PrintRequestForm = () => {
 									<span className="text-red-500">*</span>
 								</Label>
 								{colorErrors.tint_colors && (
-									<p className="text-sm text-red-500">{colorErrors.tint_colors}</p>
+									<p className="text-sm text-red-500">
+										{colorErrors.tint_colors}
+									</p>
 								)}
 								<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
 									{Object.entries(tintColors).map(([key, value]) => (

@@ -29,13 +29,12 @@ import {
 import {
 	paperSizeOptions,
 	paperTypeOptions,
-	typeReceiptOptions,
 	copiesColors,
 	tintColors,
 } from "@/lib/types";
 import { useAppStore } from "@/app/stores/useAppStore";
 import { ErrorBadge } from "@/components/error-badge";
-import { getFileName } from "@/lib/helpers";
+import { getFileName, isPrintingType } from "@/lib/helpers";
 
 const PrintJobRequestEdit = () => {
 	const router = useRouter();
@@ -73,6 +72,7 @@ const PrintJobRequestEdit = () => {
 			price: data.price ? Number(data.price) : undefined,
 			created_at: data.created_at ?? "",
 			updated_at: data.updated_at ?? "",
+			type_receipt: data.type_receipt ?? undefined,
 		};
 	};
 
@@ -83,6 +83,7 @@ const PrintJobRequestEdit = () => {
 				const response = await axios.get(`/api/print-jobs/${id}`, {
 					headers: { Authorization: `Bearer ${token}` },
 				});
+				console.log('la maldita respuesta', response.data)
 				const normalized = normalizePrintRequest(response.data);
 				setData(normalized);
 			} catch (error) {
@@ -117,17 +118,16 @@ const PrintJobRequestEdit = () => {
 
 		// Validaciones básicas
 		if (!data.name) newErrors.push("El campo 'Nombre' es obligatorio.");
-		if (!data.type_receipt_id) newErrors.push("El campo 'Tipo' es obligatorio.");
 		if (data.quantity <= 0) newErrors.push("La cantidad debe ser mayor a 0.");
-		if (!data.paper_size || data.paper_size === "0") 
+		if (!data.paper_size || data.paper_size === "0")
 			newErrors.push("El campo 'Tamaño de papel' es obligatorio.");
-		if (!data.paper_type || data.paper_type === "0") 
+		if (!data.paper_type || data.paper_type === "0")
 			newErrors.push("El campo 'Tipo de papel' es obligatorio.");
-		if (!data.description) 
+		if (!data.description)
 			newErrors.push("El campo 'Descripción' es obligatorio.");
 
 		// Validaciones condicionales para tipo_receipt_id === "1"
-		if (data.type_receipt_id === "1") {
+		if (data.type_receipt?.receipt_category === "Impresión") {
 			if (!data.copies_number || parseInt(data.copies_number) <= 0) {
 				newErrors.push("El campo 'Número de copias' es obligatorio.");
 			}
@@ -165,7 +165,6 @@ const PrintJobRequestEdit = () => {
 
 		form.append("customer_id", user.customer.id);
 		form.append("name", data.name);
-		form.append("type_receipt_id", data.type_receipt_id);
 		form.append("paper_size", data.paper_size);
 		form.append("paper_type", data.paper_type);
 		form.append("quantity", String(data.quantity));
@@ -175,7 +174,7 @@ const PrintJobRequestEdit = () => {
 			form.append("file_path", newFile);
 		}
 
-		if (data.type_receipt_id === "1") {
+		if (data.type_receipt?.receipt_category === "Impresión") {
 			if (data.folio) form.append("folio", data.folio);
 			if (data.copies_number) form.append("copies_number", data.copies_number);
 
@@ -191,7 +190,6 @@ const PrintJobRequestEdit = () => {
 		try {
 			const response = await axios.post(`/api/print-jobs/${id}`, form, {
 				headers: {
-					Authorization: `Bearer ${token}`,
 					"Content-Type": "multipart/form-data",
 				},
 			});
@@ -202,12 +200,16 @@ const PrintJobRequestEdit = () => {
 		} catch (error: any) {
 			console.error("Error al actualizar la solicitud:", error);
 			if (error.response?.data?.errors) {
-				const serverErrors = Object.values(error.response.data.errors).flat() as string[];
+				const serverErrors = Object.values(
+					error.response.data.errors
+				).flat() as string[];
 				setErrors(serverErrors);
 			} else if (error.response?.data?.message) {
 				setErrors([error.response.data.message]);
 			} else {
-				setErrors(["Error al actualizar la solicitud. Por favor, intente de nuevo."]);
+				setErrors([
+					"Error al actualizar la solicitud. Por favor, intente de nuevo.",
+				]);
 			}
 		}
 	};
@@ -238,7 +240,7 @@ const PrintJobRequestEdit = () => {
 
 					<Button
 						variant="outline"
-						onClick={() => router.push("/client/dashboard")}
+						onClick={() => router.push(user?.isAdmin ? "/admin/dashboard" : "/client/dashboard")}
 					>
 						Volver
 					</Button>
@@ -274,7 +276,9 @@ const PrintJobRequestEdit = () => {
 						<div className="space-y-6">
 							{/* NOMBRE */}
 							<div className="space-y-2">
-								<Label>Nombre de la solicitud <span className="text-red-500">*</span></Label>
+								<Label>
+									Nombre de la solicitud <span className="text-red-500">*</span>
+								</Label>
 								<Input
 									value={data.name}
 									onChange={(e) => setData({ ...data, name: e.target.value })}
@@ -284,31 +288,19 @@ const PrintJobRequestEdit = () => {
 							{/* TIPO / CANTIDAD */}
 							<div className="grid gap-6 md:grid-cols-2">
 								<div className="space-y-2">
-									<Label>Tipo <span className="text-red-500">*</span></Label>
-									<Select
-										value={data.type_receipt_id}
-										onValueChange={(value) =>
-											setData({ ...data, type_receipt_id: value })
-										}
-										required
-									>
-										<SelectTrigger className="w-full" id="category">
-											<SelectValue placeholder="Seleccione una opción" />
-										</SelectTrigger>
-										<SelectContent>
-											{Object.entries(typeReceiptOptions).map(
-												([key, value]) => (
-													<SelectItem key={key} value={key}>
-														{value}
-													</SelectItem>
-												)
-											)}
-										</SelectContent>
-									</Select>
+									<Label>
+										Tipo <span className="text-red-500">*</span>
+									</Label>
+									<Input
+										value={data.type_receipt?.name || ""}
+										disabled
+									/>
 								</div>
 
 								<div className="space-y-2">
-									<Label>Cantidad <span className="text-red-500">*</span></Label>
+									<Label>
+										Cantidad <span className="text-red-500">*</span>
+									</Label>
 									<Input
 										type="number"
 										min="1"
@@ -325,7 +317,9 @@ const PrintJobRequestEdit = () => {
 								<>
 									<div className="grid gap-6 md:grid-cols-2">
 										<div className="space-y-2">
-											<Label>Número de copias <span className="text-red-500">*</span></Label>
+											<Label>
+												Número de copias <span className="text-red-500">*</span>
+											</Label>
 											<Input
 												type="number"
 												min="1"
@@ -337,7 +331,9 @@ const PrintJobRequestEdit = () => {
 										</div>
 
 										<div className="space-y-2">
-											<Label>Folio <span className="text-red-500">*</span></Label>
+											<Label>
+												Folio <span className="text-red-500">*</span>
+											</Label>
 											<Input
 												value={data.folio}
 												onChange={(e) =>
@@ -383,7 +379,9 @@ const PrintJobRequestEdit = () => {
 							{/* TAMAÑO Y TIPO DE PAPEL */}
 							<div className="grid gap-6 md:grid-cols-2">
 								<div className="space-y-2">
-									<Label>Tamaño de papel <span className="text-red-500">*</span></Label>
+									<Label>
+										Tamaño de papel <span className="text-red-500">*</span>
+									</Label>
 									<Select
 										value={data.paper_size}
 										onValueChange={(value) =>
@@ -405,7 +403,9 @@ const PrintJobRequestEdit = () => {
 								</div>
 
 								<div className="space-y-2">
-									<Label>Tipo de papel <span className="text-red-500">*</span></Label>
+									<Label>
+										Tipo de papel <span className="text-red-500">*</span>
+									</Label>
 									<Select
 										value={data.paper_type}
 										onValueChange={(value) =>
@@ -524,35 +524,34 @@ const PrintJobRequestEdit = () => {
 								)}
 
 								{/* Botón para cargar nuevo archivo */}
-								<div className="flex items-center gap-4">
+								<div className="space-y-2">
+									<Label htmlFor="file_path">
+										Documento de impresión{" "}
+										<span className="text-red-500">*</span>
+									</Label>
 									<Input
-										id="file_path_edit"
+										id="file_path"
 										type="file"
 										accept=".pdf"
 										onChange={handleFileChange}
-										className="sr-only peer"
+										disabled={false}
 									/>
-									<Label
-										htmlFor="file_path_edit"
-										className="
-											flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background
-											px-4 py-2 text-sm
-											hover:bg-accent
-											peer-focus-visible:outline-none
-											peer-focus-visible:ring-2
-											peer-focus-visible:ring-ring
-											peer-focus-visible:ring-offset-2
-										"
-									>
-										<Upload className="h-4 w-4" />
-										{newFile ? "Cambiar archivo" : "Cargar nuevo archivo (PDF)"}
-									</Label>
+									{data.file_path && (
+										<p className="text-xs text-muted-foreground">
+											Archivo: {data.file_path.name}
+										</p>
+									)}
+									<p className="text-xs text-muted-foreground">
+										Adjunta la captura o comprobante de tu transferencia
+									</p>
 								</div>
 							</div>
 
 							{/* DESCRIPCIÓN */}
 							<div className="space-y-2">
-								<Label>Descripción <span className="text-red-500">*</span></Label>
+								<Label>
+									Descripción <span className="text-red-500">*</span>
+								</Label>
 								<Textarea
 									value={data.description}
 									rows={4}
@@ -576,12 +575,12 @@ const PrintJobRequestEdit = () => {
 												onCheckedChange={(checked) => {
 													const colorId = parseInt(key);
 													const currentLength = data.tint_colors.length;
-													
+
 													// Validar que no se excedan 4 colores
 													if (checked && currentLength >= 4) {
 														return;
 													}
-													
+
 													setData({
 														...data,
 														tint_colors: checked

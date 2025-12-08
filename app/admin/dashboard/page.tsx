@@ -11,6 +11,7 @@
   import {ClientStatus,FormState, PrintRequest} from "@/lib/types"
   import {FormClient} from "@/components/client-form/form-client"
   import {CreateClient} from "@/components/client-form/add-client"
+  import { EditClient } from "@/components/client-form/edit-client"
   import {useAppStore } from "@/app/stores//useAppStore"
   import { useRouter } from "next/navigation"
 import LoadingSpinner from "@/components/ui/loading-spinner"
@@ -173,6 +174,10 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
                   case ClientStatus.Create:
                     return  (
                     <CreateClient/>
+                    )
+                  case ClientStatus.Edit:
+                    return (
+                      <EditClient/>
                     )
                   default:
                     return (

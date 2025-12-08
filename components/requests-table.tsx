@@ -409,7 +409,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 												</Link>
 											)}
 										{((user.isAdmin && canChangeStatus(request)) ||
-											request.status === "waiting_acceptance") && (
+											(!user.isAdmin && request.status === "waiting_acceptance")) && (
 											<Button
 												onClick={() => handleStatusChangeClick(request)}
 												variant="edit"

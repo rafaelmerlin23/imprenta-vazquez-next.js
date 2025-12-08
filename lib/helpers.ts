@@ -7,3 +7,13 @@ export const formatDate = (dateString: string) => {
         day: "numeric",
     });
 };
+
+export const getFileName = (filepath: string | File | null) => {
+    if (typeof filepath === "string") {
+        return filepath.split("/").pop() || "archivo";
+    }
+    if (filepath instanceof File) {
+        return filepath.name || "archivo";
+    }
+    return "archivo";
+};

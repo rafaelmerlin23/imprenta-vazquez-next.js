@@ -35,6 +35,7 @@ import {
 } from "@/lib/types";
 import { useAppStore } from "@/app/stores/useAppStore";
 import { ErrorBadge } from "@/components/error-badge";
+import { getFileName } from "@/lib/helpers";
 
 const PrintJobRequestEdit = () => {
 	const router = useRouter();
@@ -104,16 +105,6 @@ const PrintJobRequestEdit = () => {
 
 	const handleRemoveNewFile = () => {
 		setNewFile(null);
-	};
-
-	const getFileName = (filepath: string | File | null) => {
-		if (typeof filepath === "string") {
-			return filepath.split("/").pop() || "archivo";
-		}
-		if (filepath instanceof File) {
-			return filepath.name || "archivo";
-		}
-		return "archivo";
 	};
 
 	const handleSubmit = async () => {

@@ -12,9 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
 	FileText,
@@ -31,10 +29,17 @@ import {
 	Palette,
 	Download,
 	Maximize2,
+	CreditCard,
+	CheckCircle2,
 } from "lucide-react";
 import axios from "@/lib/axios";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { PrintJobRequest, User } from "@/lib/types";
+import {
+	PaymentMethod,
+	PrintJobRequest,
+	User,
+	paymentMethodLabels,
+} from "@/lib/types";
 import {
 	typeReceiptOptions,
 	copiesColors,
@@ -44,6 +49,12 @@ import {
 } from "@/lib/types";
 import { useAppStore } from "@/app/stores/useAppStore";
 import { formatDate } from "@/lib/helpers";
+import RejectionAlert from "@/components/print-jobs/rejection-alert";
+import { StatusBadge } from "@/components/status-badge";
+import Link from "next/link";
+import { getFileName } from "@/lib/helpers";
+import { AddPaymentModal } from "@/components/print-jobs/add-payment-modal";
+import { ErrorDialog } from "@/components/error-dialog";
 
 const PrintJobRequestShow = () => {
 	const router = useRouter();
@@ -53,6 +64,16 @@ const PrintJobRequestShow = () => {
 	const [data, setData] = useState<PrintJobRequest | null>(null);
 	const [showPreview, setShowPreview] = useState(false);
 	const [isFullscreen, setIsFullscreen] = useState(false);
+	const [showPaymentModal, setShowPaymentModal] = useState(false);
+	const [paymentAmount, setPaymentAmount] = useState("");
+	const [paymentFile, setPaymentFile] = useState<File | null>(null);
+	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+	const [showErrorDialog, setShowErrorDialog] = useState(false);
+	const [errorDialogTexts, setErrorDialogTexts] = useState({
+		title: "",
+		description: "",
+	});
+	const token = useAppStore((state) => state.token);
 
 	const normalizePrintRequest = (data: any): PrintJobRequest => {
 		return {
@@ -79,6 +100,8 @@ const PrintJobRequestShow = () => {
 			created_at: data.created_at ?? "",
 			updated_at: data.updated_at ?? "",
 			payment_method: data.payment_method ?? undefined,
+			reason_rejection: data.reason_rejection ?? undefined,
+			payments: data.payments ?? [],
 		};
 	};
 
@@ -105,45 +128,86 @@ const PrintJobRequestShow = () => {
 		return filename.split(".").pop()?.toLowerCase() || "";
 	};
 
-	const getFileName = (filepath: string | File | null) => {
-		if (typeof filepath === "string") {
-			return filepath.split("/").pop() || "archivo";
-		}
-		if (filepath instanceof File) {
-			return filepath.name || "archivo";
-		}
-		return "archivo";
-	};
-
-	const getStatusBadge = (status: string) => {
-		const statusMap: Record<
-			string,
-			{
-				label: string;
-				variant: "default" | "secondary" | "destructive" | "outline";
-			}
-		> = {
-			"1": { label: "Pendiente", variant: "secondary" },
-			"2": { label: "En proceso", variant: "default" },
-			"3": { label: "Completada", variant: "outline" },
-			"4": { label: "Cancelada", variant: "destructive" },
-			"5": { label: "En revisión", variant: "secondary" },
-		};
-
-		const statusInfo = statusMap[status] || {
-			label: "Desconocido",
-			variant: "outline",
-		};
-		return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
-	};
-
 	const canEdit = () => {
 		if (!data || !user || !user.customer) return false;
-		const editableStatuses = [1, 2, 5];
+		const editableStatuses = ["pending", "declined", "waiting_acceptance"];
 		return (
-			editableStatuses.includes(Number(data.status)) &&
+			editableStatuses.includes(data.status) &&
 			data.customer_id === String(user.customer.id)
 		);
+	};
+
+	const getRemainingAmount = () => {
+		if (!data?.price || !data?.payments) return 0;
+		const totalPaid = data.payments.reduce(
+			(sum, payment) => sum + Number(payment.amount),
+			0
+		);
+		return data.price - totalPaid;
+	};
+
+	const handleAddPayment = async () => {
+		if (!data) return;
+		if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+			setErrorDialogTexts({
+				title: "Monto inválido",
+				description: "Ingresa un monto válido para el pago.",
+			});
+			setShowErrorDialog(true);
+			return;
+		}
+		
+		if (parseFloat(paymentAmount) > getRemainingAmount()) {
+			setErrorDialogTexts({
+				title: "Monto excede saldo pendiente",
+				description: "El monto del pago no puede exceder el saldo pendiente.",
+			});
+			setShowErrorDialog(true);
+			return;
+		}
+		
+		if (!paymentFile) {
+			setErrorDialogTexts({
+				title: "Comprobante faltante",
+				description: "Adjunta el comprobante de pago.",
+			});
+			setShowErrorDialog(true);
+			return;
+		}
+		
+		setIsProcessingPayment(true);
+		try {
+			const formData = new FormData();
+			formData.append("payment_method", "1"); // parcial
+			formData.append("print_job_request_id", String(data.id));
+			
+			formData.append("payment_amount", paymentAmount);
+			if (paymentFile) {
+				formData.append("payment_file", paymentFile);
+			}
+
+			const response = await axios.post(`/api/print-jobs-payments`, formData, {
+				headers: {
+					"Authorization": `Bearer ${token}`,
+					"Content-Type": "multipart/form-data",
+				},
+			});
+			console.log("Respuesta del servidor:", response);
+
+			if (response.status === 201) {
+				setShowPaymentModal(false);
+				window.location.reload();
+			}
+		} catch (error: any) {
+			console.error("Error al agregar pago:", error);
+			setErrorDialogTexts({
+				title: "Error al registrar el pago",
+				description: error.response?.data?.message || "Error al registrar el pago",
+			});
+			setShowErrorDialog(true);
+		} finally {
+			setIsProcessingPayment(false);
+		}
 	};
 
 	if (!data) {
@@ -177,25 +241,48 @@ const PrintJobRequestShow = () => {
 									<span className="text-sm text-slate-500">
 										Solicitud #{data.id}
 									</span>
-									{getStatusBadge(data.status)}
+									<StatusBadge status={data.status} />
 								</div>
 							</div>
 						</div>
 					</div>
 
-					{canEdit() && (
-						<Button
-							onClick={() => router.push(`/print-jobs/${id}/edit`)}
-							className="bg-amber-400 hover:bg-amber-500 text-black font-medium"
-						>
-							<Edit className="h-4 w-4 mr-2" />
-							Editar solicitud
-						</Button>
-					)}
+					<div className="flex items-center gap-2">
+						{/* Botón de agregar pago - solo si hay saldo pendiente y está accepted/in_progress */}
+						{!user?.isAdmin &&
+							getRemainingAmount() > 0 &&
+							!data.is_paid &&
+							(data.status === "accepted" || data.status === "in_progress") && (
+								<Button
+									onClick={() => setShowPaymentModal(true)}
+									className="bg-green-600 hover:bg-green-500 text-white font-medium"
+								>
+									<CreditCard className="h-4 w-4 mr-2" />
+									Agregar pago
+								</Button>
+							)}
+
+						{canEdit() && (
+							<Link href={`/print-jobs/${id}/edit`}>
+								<Button className="bg-blue-600 hover:bg-blue-500 text-white font-medium">
+									<Edit className="h-4 w-4 mr-2" />
+									Editar solicitud
+								</Button>
+							</Link>
+						)}
+					</div>
 				</div>
 			</header>
 
 			<main className="container mx-auto max-w-6xl px-4 py-8">
+				{data.status === "declined" && !user?.isAdmin && (
+					<div className="mb-6">
+						<RejectionAlert
+							requestId={data.id}
+							reasonRejection={data.reason_rejection}
+						/>
+					</div>
+				)}
 				<div className="grid gap-6 lg:grid-cols-3">
 					{/* Columna principal */}
 					<div className="lg:col-span-2 space-y-6">
@@ -462,8 +549,74 @@ const PrintJobRequestShow = () => {
 								)}
 							</CardContent>
 						</Card>
+					</div>
 
-						{/* Descripción */}
+					{/* Columna lateral - Info adicional */}
+					<div className="space-y-4">
+						{/* Estado y fechas */}
+						<Card className="shadow-md border-slate-200">
+							<CardHeader>
+								<CardTitle className="text-lg">
+									Información del pedido
+								</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-3">
+								<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+									<Calendar className="h-5 w-5 text-slate-500 mt-0.5" />
+									<div className="flex-1">
+										<p className="text-xs text-slate-500 font-medium mb-1">
+											Fecha de creación
+										</p>
+										<p className="text-sm text-slate-900 font-semibold">
+											{formatDate(data.created_at)}
+										</p>
+									</div>
+								</div>
+
+								<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+									<Clock className="h-5 w-5 text-slate-500 mt-0.5" />
+									<div className="flex-1">
+										<p className="text-xs text-slate-500 font-medium mb-1">
+											Última actualización
+										</p>
+										<p className="text-sm text-slate-900 font-semibold">
+											{formatDate(data.updated_at)}
+										</p>
+									</div>
+								</div>
+
+								{data.estimated_date && (
+									<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+										<Clock className="h-5 w-5 text-slate-500 mt-0.5" />
+										<div className="flex-1">
+											<p className="text-xs text-slate-500 font-medium mb-1">
+												Tiempo estimado
+											</p>
+											<p className="text-sm text-slate-900 font-semibold">
+												{formatDate(data.estimated_date)}
+											</p>
+										</div>
+									</div>
+								)}
+
+								{data.price && (
+									<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+										<div className="h-5 w-5 text-slate-500 mt-0.5 flex items-center justify-center font-bold text-lg">
+											$
+										</div>
+										<div className="flex-1">
+											<p className="text-xs text-slate-500 font-medium mb-1">
+												Cotización
+											</p>
+											<p className="text-sm text-slate-900 font-semibold">
+												${data.price.toFixed(2)} MXN
+											</p>
+										</div>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+
 						{data.description && (
 							<Card className="shadow-md border-slate-200">
 								<CardHeader className="pb-4">
@@ -480,100 +633,152 @@ const PrintJobRequestShow = () => {
 								</CardContent>
 							</Card>
 						)}
-					</div>
 
-					{/* Columna lateral - Info adicional */}
-					<div className="space-y-6">
-						{/* Estado y fechas */}
-						<Card className="shadow-md border-slate-200">
-							<CardHeader className="pb-4">
-								<CardTitle className="text-lg">
-									Información del pedido
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<div className="space-y-3">
-									<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-										<Calendar className="h-5 w-5 text-slate-500 mt-0.5" />
-										<div className="flex-1">
-											<p className="text-xs text-slate-500 font-medium mb-1">
-												Fecha de creación
-											</p>
-											<p className="text-sm text-slate-900 font-semibold">
-												{formatDate(data.created_at)}
-											</p>
-										</div>
+						{/* Pagos */}
+						{data.payments && data.payments.length > 0 && (
+							<Card className="shadow-md border-slate-200">
+								<CardHeader className="pb-4">
+									<div className="flex items-center gap-2">
+										<CreditCard className="h-5 w-5 text-amber-500" />
+										<CardTitle className="text-lg">Pagos realizados</CardTitle>
 									</div>
-
-									<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-										<Clock className="h-5 w-5 text-slate-500 mt-0.5" />
-										<div className="flex-1">
-											<p className="text-xs text-slate-500 font-medium mb-1">
-												Última actualización
-											</p>
-											<p className="text-sm text-slate-900 font-semibold">
-												{formatDate(data.updated_at)}
-											</p>
-										</div>
-									</div>
-
-									{data.estimated_date && (
-										<div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-											<Clock className="h-5 w-5 text-amber-600 mt-0.5" />
-											<div className="flex-1">
-												<p className="text-xs text-amber-700 font-medium mb-1">
-													Tiempo estimado
-												</p>
-												<p className="text-sm text-amber-900 font-semibold">
-													{formatDate(data.estimated_date)}
-												</p>
-											</div>
-										</div>
-									)}
-								</div>
-
-								{data.price && (
-									<>
-										<Separator />
-										<div className="p-4 bg-linear-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200">
-											<p className="text-xs text-green-700 font-medium mb-1">
-												Cotización
-											</p>
-											<p className="text-2xl font-bold text-green-900">
-												${data.price.toFixed(2)} MXN
-											</p>
-										</div>
-									</>
-								)}
-							</CardContent>
-						</Card>
-
-						{/* Ayuda */}
-						{user && user.customer && (
-							<Card className="shadow-md border-amber-200 bg-linear-to-br from-amber-50 to-yellow-50">
-								<CardHeader className="pb-3">
-									<CardTitle className="text-base flex items-center gap-2">
-										<FileText className="h-5 w-5 text-amber-600" />
-										¿Necesitas ayuda?
-									</CardTitle>
+									<CardDescription>
+										Historial de pagos de esta solicitud
+									</CardDescription>
 								</CardHeader>
-								<CardContent>
-									<p className="text-sm text-slate-600 mb-4">
-										Si tienes dudas sobre tu solicitud, contacta con nuestro
-										equipo.
-									</p>
-									<Button
-										variant="outline"
-										className="w-full border-amber-400 hover:bg-amber-100"
-									>
-										Contactar soporte
-									</Button>
+								<CardContent className="space-y-3">
+									{data.payments.map((payment, index) => (
+										<div
+											key={payment.id}
+											className="p-4 bg-slate-50 rounded-lg border hover:border-amber-300 transition-colors"
+										>
+											<div className="flex items-start justify-between mb-3">
+												<div className="flex items-center gap-2">
+													<CheckCircle2 className="h-4 w-4 text-green-600" />
+													<span className="text-xs font-semibold text-slate-900">
+														Pago #{index + 1}
+													</span>
+												</div>
+												<span className="text-sm font-bold text-green-700">
+													${Number(payment.amount).toFixed(2)} MXN
+												</span>
+											</div>
+
+											<div className="space-y-2 text-xs">
+												<div className="flex justify-between">
+													<span className="text-slate-500">Método:</span>
+													<span className="font-medium text-slate-900">
+														{
+															paymentMethodLabels[
+																payment.payment_method as PaymentMethod
+															]
+														}
+													</span>
+												</div>
+												<div className="flex justify-between">
+													<span className="text-slate-500">Fecha de pago:</span>
+													<span className="font-medium text-slate-900">
+														{formatDate(payment.paid_at)}
+													</span>
+												</div>
+											</div>
+
+											{payment.file_path && (
+												<Button
+													variant="outline"
+													size="sm"
+													className="w-full mt-3 border-amber-200 hover:bg-amber-50 text-xs"
+													onClick={() =>
+														window.open(
+															`http://localhost:8000/payment-files/${payment.file_path}`,
+															"_blank"
+														)
+													}
+												>
+													<Download className="h-3 w-3 mr-2" />
+													Ver comprobante
+												</Button>
+											)}
+										</div>
+									))}
+
+									{/* Resumen de pagos */}
+									<div className="pt-3 border-t">
+										<div className="flex justify-between items-center">
+											<span className="text-sm font-medium text-slate-600">
+												Total pagado:
+											</span>
+											<span className="text-lg font-bold text-green-700">
+												$
+												{data.payments
+													.reduce(
+														(sum, payment) => sum + Number(payment.amount),
+														0
+													)
+													.toFixed(2)}{" "}
+												MXN
+											</span>
+										</div>
+										{data.price && (
+											<div className="flex justify-between items-center mt-2">
+												<span className="text-sm font-medium text-slate-600">
+													Restante:
+												</span>
+												<span
+													className={`text-lg font-bold ${
+														data.price -
+															data.payments.reduce(
+																(sum, payment) => sum + Number(payment.amount),
+																0
+															) <=
+														0
+															? "text-green-700"
+															: "text-amber-700"
+													}`}
+												>
+													$
+													{(
+														data.price -
+														data.payments.reduce(
+															(sum, payment) => sum + Number(payment.amount),
+															0
+														)
+													).toFixed(2)}{" "}
+													MXN
+												</span>
+											</div>
+										)}
+									</div>
 								</CardContent>
 							</Card>
 						)}
 					</div>
 				</div>
 			</main>
+			{showErrorDialog && (
+				<ErrorDialog
+					isOpen={showErrorDialog}
+					onClose={() => setShowErrorDialog(false)}
+					title={errorDialogTexts.title}
+					description={errorDialogTexts.description}
+				/>
+			)}
+			<AddPaymentModal
+				isOpen={showPaymentModal}
+				onClose={() => {
+					setShowPaymentModal(false);
+					setPaymentAmount("");
+					setPaymentFile(null);
+				}}
+				onConfirm={handleAddPayment}
+				request={data}
+				paymentAmount={paymentAmount}
+				onPaymentAmountChange={setPaymentAmount}
+				paymentFile={paymentFile}
+				onPaymentFileChange={setPaymentFile}
+				isProcessing={isProcessingPayment}
+				remainingAmount={getRemainingAmount()}
+			/>
 		</div>
 	);
 };

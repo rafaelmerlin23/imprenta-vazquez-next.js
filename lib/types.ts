@@ -156,6 +156,7 @@ export type PrintJobRequest = {
   is_paid?: boolean
   created_at: string
   updated_at: string
+  reason_rejection?: string
   customer?: Customer
   payments?: PrintJobPayment[];
 };

@@ -62,6 +62,14 @@ export const createClientSlice: StateCreator<
       console.error("Error loading clients", err)
     }
   },
+  deleteClient: (client: Client) => {
+  const { clients } = get()
+  
+  const updatedClients = clients.filter(c => c.id !== client.id)
+  
+  set({ clients: updatedClients })
+},
+
 
   deleteClient: (client: Client) => {
   const { clients } = get()

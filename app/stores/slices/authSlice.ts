@@ -37,79 +37,42 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
       const { user, password } = get()
       
       await axios.get("/sanctum/csrf-cookie")
-      
-      const response = await axios.post("/api/login", { 
-        username: user, 
-        password: password 
-      })
+
+      const response = await axios.post("/api/login", { username:user, password:password })
+      console.log(response)
       
       const token = response.data?.token?.toString()
       const userInfo = mapUser(response.data.user)
       
       if (token) {
         set({ token, isLogged: true })
+        
       }
 
-      if (token && userInfo.isAdmin) {
-        set({ currentLoginInfoUser: userInfo, isLoading: false })
+      if (token && userInfo.is_admin) {
+        set({ currentLoginInfoUser: userInfo });
         router.push("/admin/dashboard")
       }
 
-      if (token && !userInfo.isAdmin) {
-        const response = await axios.get("/api/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        set({ currentLoginInfoUser: response.data, isLoading: false })
+      if(token && !userInfo.is_admin){
+        const response = await axios.get("/api/user") 
+        set({currentLoginInfoUser:response.data})
         router.push("/client/dashboard")
       }
 
-    } catch (err: any) {
-      let errorMessage = "Error desconocido al iniciar sesión"
-      
-      if (err.response) {
-        // El servidor respondió con un código de error
-        switch (err.response.status) {
-          case 401:
-            errorMessage = "Credenciales incorrectas"
-            break
-          case 403:
-            errorMessage = "El usuario no está asociado a ningún cliente"
-            break
-          case 404:
-            errorMessage = "Usuario no encontrado"
-            break
-          case 422:
-            errorMessage = "Por favor verifica los datos ingresados"
-            break
-          default:
-            errorMessage = err.response.data?.message || "Error al iniciar sesión"
-        }
-      } else if (err.request) {
-        // La petición se hizo pero no hubo respuesta
-        errorMessage = "No se pudo conectar con el servidor. Verifica tu conexión."
-      }
-      
-      set({ 
-        error: errorMessage, 
-        isLoading: false,
-        isLogged: false,
-        token: null 
-      })
-      
-      console.error("Login error:", err)
+    } catch (err) {
+      console.error("Login error", err)
     }
   },
 
-  logout: async (router) => {
-    set({
-      currentLoginInfoUser: null,
-      token: null,
-      isLogged: false,
-      error: null,
-      user: "",
-      password: ""
-    })
-    localStorage.removeItem("app-storage")
-    router.push("/")
-  }
+logout: async (router) => {
+  axios.post("/api/logout").then(()=>{
+    set({currentLoginInfoUser:null})
+    set({token:null})
+    set({isLogged:false})
+    localStorage.removeItem("app-storage");
+    router.replace("/")
+  })
+ 
+}
 })

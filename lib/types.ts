@@ -46,7 +46,7 @@ export interface CustomerAddress {
 export interface UserApi {
   id: string
   is_admin: boolean
-  name: string
+  username: string
   email: string
   role: UserRole
   email_verified_at: any
@@ -200,8 +200,8 @@ export const paperTypeOptions: Record<string, string> = {
 
 export const typeReceiptOptions: Record<string, string> = {
   "0": "Seleccione una opción",
-  "1": "Impresión",
-  "2": "Varios",
+  "2": "Impresión",
+  "3": "Varios",
 }
 
 export const copiesColors = {

@@ -8,7 +8,8 @@
   import { LogOut, Users, FileText, Plus } from "lucide-react"
   import { RequestsTable } from "@/components/requests-table"
   import { ClientsTable } from "@/components/client-form/clients-table"
-  import {ClientStatus,FormState, PrintRequest} from "@/lib/types"
+  import {Client,ClientStatus,FormState, PrintRequest, requestStatusOptions} from "@/lib/types"
+ 
   import {FormClient} from "@/components/client-form/form-client"
   import {CreateClient} from "@/components/client-form/add-client"
   import { EditClient } from "@/components/client-form/edit-client"
@@ -17,13 +18,41 @@
 import LoadingSpinner from "@/components/ui/loading-spinner"
 
   export default function AdminDashboard() {
-    const {token,requests,getRequests,logout,clients,getClients,clientStatus,setClientStatus,setFormClientState} = useAppStore()
+    const {token,requests,getRequests,logout,clients,getClients,clientStatus,setClientStatus,setFormClientState,isLoadRequests} = useAppStore()
     const router = useRouter();
     const [isLoading,setIsLoading] = useState<boolean>(true)
+    const [filterRequests,setFilterRequest] = useState<PrintRequest[] | any>([])
+    const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
     
     const closeSession = ()=>{
       logout(router);
     }
+
+    const filterByStatus = (status: string | null) => {
+      if(selectedStatus === status){
+        setSelectedStatus(null);
+        setFilterRequest([...requests]); 
+        return;
+      }
+
+    setSelectedStatus(status);
+
+      if (status === null) {
+        setFilterRequest([...requests]); 
+      } else {
+        setFilterRequest([...requests?.filter((r:PrintRequest) => r.status == status)]);
+      }
+    };
+
+    const cardClass = (status: string | null) => `
+    cursor-pointer transition-all rounded-xl 
+    ${selectedStatus === status ? "bg-blue-200 border-1 border-blue-500 border-solid text-blue-500  font-bold shadow-lg scale-[1.02]" : "hover:bg-blue-100 hover:border-1 hover:border-blue-400"}
+  `;
+
+    const cardDescriptionClass = (status:string | null) =>`
+    font-medium text-xl ${selectedStatus === status?"text-blue-500":"text-black"}
+    `
 
 
 	useEffect(() => {
@@ -52,9 +81,10 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
     },[])
 
     useEffect(()=>{
-      getRequests(setIsLoading)
+      getRequests(setIsLoading) 
+      if(isLoadRequests) setFilterRequest([...requests])
     },
-    [])
+    [isLoadRequests])
 
     if (isLoading) {
         return <LoadingSpinner />;
@@ -100,46 +130,44 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
 
             <TabsContent value="requests" className="space-y-6">
               <div className="grid gap-4 md:grid-cols-4">
-                <Card>
+                <Card className={cardClass("1")} onClick={()=> filterByStatus("1")}>
                   <CardHeader className="pb-3">
-                    <CardDescription>Solicitadas</CardDescription>
-                    <CardTitle className="text-3xl">{requests.filter((r:PrintRequest) => r.status == "1").length}</CardTitle>
+                    <CardDescription className={cardDescriptionClass("1")} >Solicitadas</CardDescription>
+                    <CardTitle className="text-3xl">{requests?.filter((r:PrintRequest) => r.status == "1").length}</CardTitle>
                   </CardHeader>
                 </Card>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardDescription>Esperando Aceptación</CardDescription>
+                <Card className={cardClass("2")} onClick={()=> filterByStatus("2")}>
+                  <CardHeader className=" pb-3">
+                    <CardDescription className={cardDescriptionClass("2")}>Esperando Aceptación</CardDescription>
                     <CardTitle className="text-3xl">
-                      {requests.filter((r:any) => r.status == "2").length}
+                      {requests?.filter((r:PrintRequest) => r.status == "2").length}
                     </CardTitle>
                   </CardHeader>
                 </Card>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardDescription>En Proceso</CardDescription>
-                    <CardTitle className="text-3xl">{requests.filter((r:any) => r.status == "3").length}</CardTitle>
+                <Card className={cardClass("3")} onClick={()=> filterByStatus("3")}>
+                  <CardHeader className="pb-3" >
+                    <CardDescription className={cardDescriptionClass("3")}>En Proceso</CardDescription>
+                    <CardTitle className="text-3xl">{requests?.filter((r:PrintRequest) => r.status == "3").length}</CardTitle>
                   </CardHeader>
                 </Card>
-                <Card>
+                <Card className={cardClass("4")} onClick={()=> filterByStatus("4")}>
                   <CardHeader className="pb-3">
-                    <CardDescription>Terminadas</CardDescription>
-                    <CardTitle className="text-3xl">{requests.filter((r:any) => r.status == "4").length}</CardTitle>
+                    <CardDescription className={cardDescriptionClass("4")}>Terminadas</CardDescription>
+                    <CardTitle className="text-3xl">{requests?.filter((r:PrintRequest) => r.status == "4").length}</CardTitle>
                   </CardHeader>
                 </Card>
               </div>
 
-						<Card>
-							<CardHeader>
-								<CardTitle>Todas las Solicitudes</CardTitle>
-								<CardDescription>
-									Gestiona y actualiza el estado de las solicitudes de impresión
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<RequestsTable requests={requests} />
-							</CardContent>
-						</Card>
-					</TabsContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Todas las Solicitudes</CardTitle>
+                  <CardDescription>Gestiona y actualiza el estado de las solicitudes de impresión</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RequestsTable requests={filterRequests} isAdmin />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="clients" className="space-y-6">
               <Card>

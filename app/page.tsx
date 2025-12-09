@@ -44,7 +44,13 @@ export default function HomePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(router)
+    
+    try{
+      await login(router)
+    }catch(e){
+      setError("error we")
+    }
+
   }
 
   const handleCloseErrorDialog = () => {

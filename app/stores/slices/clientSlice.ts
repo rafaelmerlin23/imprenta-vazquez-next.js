@@ -71,14 +71,6 @@ export const createClientSlice: StateCreator<
 },
 
 
-  deleteClient: (client: Client) => {
-  const { clients } = get()
-  
-  const updatedClients = clients.filter(c => c.id !== client.id)
-  
-  set({ clients: updatedClients })
-},
-
 
   getClient: async () => {
     const { clientIdSelected, detailsOfViewedCustomers, token } = get()

@@ -32,7 +32,7 @@ export function EditClient() {
         representativeName: client.representative_name || "",
         phoneNumber: client.phone_number || "",
         email: client.user.email || "",
-        username: client.user.name || "",
+        username: client.user.username || "",
         rfc: client.rfc || "",
         address: client.customer_address.address || "",
         postalcode: client.customer_address.postal_code || "",
@@ -302,7 +302,7 @@ export function EditClient() {
                   type="button"
                   size="lg"
                   variant="secondary"
-                  onClick={() => setClientStatus(ClientStatus.Show)}
+                  onClick={() => setClientStatus(ClientStatus.ShowAll)}
                 >
                   Cancelar
                 </Button>

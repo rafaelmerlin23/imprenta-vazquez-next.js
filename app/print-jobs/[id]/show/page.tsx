@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -159,7 +159,13 @@ const PrintJobRequestShow = () => {
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => router.push("/client/dashboard")}
+							onClick={() => {
+								if(user?.is_admin){
+									router.push("/admin/dashboard")
+								}else{
+									router.push("/client/dashboard")
+								}
+							}}
 							className="rounded-full"
 						>
 							<ArrowLeft className="h-5 w-5" />

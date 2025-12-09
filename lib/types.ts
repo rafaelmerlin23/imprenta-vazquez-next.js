@@ -60,8 +60,8 @@ export interface UserApi {
 export function mapUser(api: UserApi): User {
   return {
     id: api.id,
-    isAdmin: api.is_admin,
-    name: api.name,
+    is_admin: api.is_admin,
+    username: api.username,
     email: api.email,
     role: api.role,
     emailVerifiedAt: api.email_verified_at,
@@ -74,8 +74,8 @@ export function mapUser(api: UserApi): User {
 
 export interface User {
   id: string
-  isAdmin: boolean
-  name: string
+  is_admin: boolean
+  username: string
   email: string
   role: UserRole
   emailVerifiedAt: any

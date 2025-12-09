@@ -1,6 +1,6 @@
 "use client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {FieldGroup} from "@/components/ui/field"
+import {FieldGroup, FieldLabel} from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/app/stores/useAppStore"
 import { ClientStatus} from "@/lib/types"
@@ -12,16 +12,61 @@ import { useState } from "react"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
+
+export const searchPostalCode = async (cp: string) => {
+  try {
+    const response = await fetch(
+      `https://api.copomex.com/query/info_cp/${cp}?token=${process.env.NEXT_PUBLIC_TOKEN_DIRECTION}`
+    );
+    
+    const data = await response.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      toast.error("Código postal no encontrado");
+      return null;
+    }
+
+    const colonias = data.map((item: any) => item.response.asentamiento);
+
+    const info = data[0].response;
+
+    return {
+      cp: info.cp,
+      estado: info.estado,
+      municipio: info.municipio,
+      ciudad: info.ciudad,
+      colonias, 
+    };
+
+  } catch (error) {
+    toast.error("Error al buscar el código postal");
+    return null;
+  }
+};
 
 export function CreateClient(){
   const {setClientStatus,token,getClients,setClients} = useAppStore()
   const [isLoading,setIsLoading] = useState<boolean>()
-  
+  const [colonies, setcolonies] = useState<string[]>([]);
+
+
+
+
   
   const {
     register,
     handleSubmit,
+    setValue,
     formState:{errors},
   } = useForm<ClientFormData>({
     resolver:zodResolver(ClientSchema)
@@ -158,17 +203,48 @@ export function CreateClient(){
           <CardContent>
            <div className="grid grid-cols-2 gap-4">
                 <TextFieldClient id="address" label="Dirección" register={register} error={errors.address} placeholder="Calle del centro" />
-                <TextFieldClient id="postalcode" label="Código postal" register={register} error={errors.postalcode} placeholder="96000" />
+                <TextFieldClient  onBlur={async (e) => {
+                  const cp = e.target.value
+                  if (cp.length === 5) {
+                    const result = await searchPostalCode(cp)
+                    if (result) {
+                      setValue("federalEntity", result.estado)
+                      setValue("municipality", result.municipio)
+                      setcolonies(result.colonias)
+                    }
+                  }}} id="postalcode" label="Código postal" register={register} error={errors.postalcode} placeholder="96000" />
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <TextFieldClient id="neighborhood" label="Colonia" register={register} error={errors.neighborhood} placeholder="Centro" />
-                <TextFieldClient id="municipality" label="Municipio" register={register} error={errors.municipality} placeholder="Cristoyucan" />
+                <div>
+                  <FieldLabel htmlFor={"colonies"}>
+                Colonia
+                 </FieldLabel>
+                <Select  onValueChange={(value) => {
+                  setValue("neighborhood", value);   
+                }}>
+                <SelectTrigger disabled={colonies.length == 0} id="colonies" className="w-[100%] mt-3">
+                  <SelectValue placeholder="Selecciona una colonia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>colonias</SelectLabel>
+                    {colonies.map((colonie)=>(
+                      <SelectItem key={colonie} value={colonie}>{colonie}</SelectItem>
+                    ))}
+                    
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+                </div>
+             
+                {/* <TextFieldClient id="neighborhood" label="Colonia" register={register} error={errors.neighborhood} placeholder="Centro" /> */}
+                <TextFieldClient disabled id="municipality" label="Municipio" register={register} error={errors.municipality} placeholder="Cristoyucan" />
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <TextFieldClient id="locality" label="Localidad" register={register} error={errors.locality} placeholder="Acayucan" />
-                <TextFieldClient id="federalEntity" label="Entidad federal" register={register} error={errors.federalEntity} placeholder="Veracruz" />
+                <TextFieldClient disabled id="federalEntity" label="Entidad federal" register={register} error={errors.federalEntity} placeholder="Veracruz" />
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">

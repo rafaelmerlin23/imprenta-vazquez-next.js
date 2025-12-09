@@ -92,6 +92,8 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 				`api/print-jobs/${selectedRequest.id}`
 			);
 
+			console.log(response)
+
 			if (response.status !== 200) {
 				throw new Error("Error al eliminar la solicitud");
 			}
@@ -124,7 +126,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 		}
 
 		// Validaciones para estado ACCEPTED
-		if (selectedStatus === "accepted" && !user?.isAdmin) {
+		if (selectedStatus === "accepted" && !user?.is_admin) {
 			if (!paymentMethod) {
 				setErrorDialogOpen(true);
 				setErrorDialogTexts({
@@ -188,7 +190,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 		}
 
 		// Validaciones para WAITING_ACCEPTANCE (admin)
-		if (selectedStatus === "waiting_acceptance" && user?.isAdmin) {
+		if (selectedStatus === "waiting_acceptance" && user?.is_admin) {
 			if (!price || parseFloat(price) <= 0) {
 				setErrorDialogOpen(true);
 				setErrorDialogTexts({
@@ -236,7 +238,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 				selectedStatus === "declined"
 			) {
 				formData.append("reason_rejection", rejectionReason.trim());
-			} else if (selectedStatus === "accepted" && !user?.isAdmin) {
+			} else if (selectedStatus === "accepted" && !user?.is_admin) {
 				formData.append("payment_method", paymentMethod);
 
 				if (paymentMethod === "1" || paymentMethod === "2") {
@@ -322,7 +324,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 
 	const getAvailableTransitions = (currentStatus: string): string[] => {
 		// Si es cliente, usar las transiciones de cliente
-		if (!user?.isAdmin) {
+		if (!user?.is_admin) {
 			return clientStatusTransitions[currentStatus] || [];
 		}
 		// Si es admin, usar todas las transiciones
@@ -357,7 +359,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 					<TableHeader>
 						<TableRow>
 							<TableHead>ID</TableHead>
-							{user.isAdmin && <TableHead>Cliente</TableHead>}
+							{user.is_admin && <TableHead>Cliente</TableHead>}
 							<TableHead>Nombre</TableHead>
 							<TableHead>Estado</TableHead>
 							<TableHead>Fecha</TableHead>
@@ -368,7 +370,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 						{requests.length === 0 ? (
 							<TableRow>
 								<TableCell
-									colSpan={user.isAdmin ? 6 : 5}
+									colSpan={user.is_admin ? 6 : 5}
 									className="text-center text-muted-foreground"
 								>
 									No hay solicitudes
@@ -380,7 +382,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 									<TableCell className="font-mono text-sm">
 										#{request.id}
 									</TableCell>
-									{user.isAdmin && (
+									{user.is_admin && (
 										<TableCell className="font-medium">
 											{request.customer?.business_name}
 										</TableCell>
@@ -400,7 +402,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 												<Eye className="h-4 w-4" />
 											</Button>
 										</Link>
-										{!user.isAdmin &&
+										{!user.is_admin &&
 											validStatusEditable.includes(request.status) && (
 												<Link href={`/print-jobs/${request.id}/edit`}>
 													<Button variant="edit" size="sm">
@@ -408,7 +410,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 													</Button>
 												</Link>
 											)}
-										{((user.isAdmin && canChangeStatus(request)) ||
+										{((user.is_admin && canChangeStatus(request)) ||
 											request.status === "waiting_acceptance") && (
 											<Button
 												onClick={() => handleStatusChangeClick(request)}
@@ -418,7 +420,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 												<ArrowRightToLineIcon className="h-4 w-4" />
 											</Button>
 										)}
-										{user.isAdmin && (
+										{user.is_admin && (
 											<Button
 												onClick={() => handleDeleteClick(request)}
 												variant="danger"

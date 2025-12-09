@@ -18,7 +18,7 @@
 import LoadingSpinner from "@/components/ui/loading-spinner"
 
   export default function AdminDashboard() {
-    const {token,requests,getRequests,logout,clients,getClients,clientStatus,setClientStatus,setFormClientState,isLoadRequests} = useAppStore()
+    const {token,requests,getRequests,logout,getClients,clientStatus,setClientStatus,setFormClientState,isLoadRequests} = useAppStore()
     const router = useRouter();
     const [isLoading,setIsLoading] = useState<boolean>(true)
     const [filterRequests,setFilterRequest] = useState<PrintRequest[] | any>([])
@@ -76,15 +76,14 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
 		}
 	}, [clientStatus]);
 
-    useEffect(()=>{
-        getClients()
-    },[])
 
     useEffect(()=>{
-      getRequests(setIsLoading) 
-      if(isLoadRequests) setFilterRequest([...requests])
+      getClients() 
+      getRequests(setIsLoading)
+       if(isLoadRequests && !isLoading) setFilterRequest([...requests])
+     
     },
-    [isLoadRequests])
+    [isLoadRequests,isLoading])
 
     if (isLoading) {
         return <LoadingSpinner />;
@@ -106,12 +105,10 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
 							</p>
 						</div>
 					</div>
-					<Link href="/">
 						<Button onClick={() => closeSession()} variant="outline">
 							<LogOut className="mr-2 h-4 w-4" />
 							Cerrar Sesión
 						</Button>
-					</Link>
 				</div>
 			</header>
 
@@ -164,7 +161,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
                   <CardDescription>Gestiona y actualiza el estado de las solicitudes de impresión</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RequestsTable requests={filterRequests} isAdmin />
+                  <RequestsTable requests={filterRequests} />
                 </CardContent>
               </Card>
             </TabsContent>

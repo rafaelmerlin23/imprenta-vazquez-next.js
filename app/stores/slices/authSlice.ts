@@ -1,7 +1,10 @@
 import axios from "@/lib/axios"
 import type { StateCreator } from "zustand"
-import { User, mapUser } from "@/lib/types"
+import { ClientStatus, User, mapUser } from "@/lib/types"
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
+import { useAppStore } from "@/app/stores/useAppStore"
+import { ClientSlice } from "./clientSlice"
+import { RequestSlice } from "./requestSlice"
 
 export interface AuthSlice {
   token: string | null
@@ -18,7 +21,12 @@ export interface AuthSlice {
   logout: (router: AppRouterInstance) => Promise<void>
 }
 
-export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
+export const createAuthSlice: StateCreator<
+  AuthSlice 
+  & ClientSlice 
+  & RequestSlice,
+  [],
+  [],AuthSlice> = (set, get) => ({
   token: null,
   currentLoginInfoUser: null,
   isLogged: false,
@@ -46,7 +54,6 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
       
       if (token) {
         set({ token, isLogged: true })
-        
       }
 
       if (token && userInfo.is_admin) {
@@ -62,17 +69,27 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set, get) => ({
 
     } catch (err) {
       console.error("Login error", err)
+    }finally{
+        set({isLoading:false})
     }
   },
 
 logout: async (router) => {
   axios.post("/api/logout").then(()=>{
-    set({currentLoginInfoUser:null})
-    set({token:null})
-    set({isLogged:false})
-    localStorage.removeItem("app-storage");
+    
+  }).finally(()=>{
+  set({
+    token: null,
+    currentLoginInfoUser: null,
+    isLogged: false,
+    requests: [],
+    clients: [],
+    clientStatus: ClientStatus.ShowAll
+  })
+
+    useAppStore.persist.clearStorage()
     router.replace("/")
   })
- 
+
 }
 })

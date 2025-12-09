@@ -92,7 +92,7 @@ export function ChangeStatusModal({
 						</span>
 						<br />
 						Selecciona el nuevo estado para esta solicitud.
-						{request?.status === "waiting_acceptance" && !user?.is_admin && (
+						{request?.status === "waiting_acceptance" && !user?.isAdmin && (
 							<>
 								<span className="text-sm">
 									{request?.price && (
@@ -140,7 +140,7 @@ export function ChangeStatusModal({
 						</Select>
 					</div>
 					{/* Campos para WAITING_ACCEPTANCE (cuando admin envía cotización) */}
-					{selectedStatus === "waiting_acceptance" && user?.is_admin && (
+					{selectedStatus === "waiting_acceptance" && user?.isAdmin && (
 						<>
 							<div className="grid gap-2">
 								<Label htmlFor="price">
@@ -187,7 +187,7 @@ export function ChangeStatusModal({
 						</>
 					)}
 					{/* Campos para ACCEPTED (cuando cliente acepta y registra pago) */}
-					{selectedStatus === "accepted" && !user?.is_admin && (
+					{selectedStatus === "accepted" && !user?.isAdmin && (
 						<>
 							<div className="grid gap-2">
 								<Label htmlFor="payment-method">
@@ -285,7 +285,7 @@ export function ChangeStatusModal({
 					)}
 
 					{/* Campo para DECLINED (cuando admin deniega solicitud) */}
-					{selectedStatus === "declined" && user?.is_admin && (
+					{selectedStatus === "declined" && user?.isAdmin && (
 						<div className="grid gap-2">
 							<Label htmlFor="rejection-reason">
 								Razón de la denegación <span className="text-red-500">*</span>
@@ -306,7 +306,7 @@ export function ChangeStatusModal({
 						</div>
 					)}
 					{/* Campo para REJECTED (cuando cliente rechaza cotización) */}
-					{selectedStatus === "rejected" && !user?.is_admin && (
+					{selectedStatus === "rejected" && !user?.isAdmin && (
 						<div className="grid gap-2">
 							<Label htmlFor="rejection-reason">
 								Razón del rechazo <span className="text-red-500">*</span>

@@ -29,7 +29,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isLogged) {
-      currentLoginInfoUser?.is_admin 
+      currentLoginInfoUser?.isAdmin 
         ? router.push("/admin/dashboard") 
         : router.push("/client/dashboard")
     }

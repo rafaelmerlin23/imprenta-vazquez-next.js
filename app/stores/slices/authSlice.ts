@@ -56,12 +56,12 @@ export const createAuthSlice: StateCreator<
         set({ token, isLogged: true })
       }
 
-      if (token && userInfo.is_admin) {
+      if (token && userInfo.isAdmin) {
         set({ currentLoginInfoUser: userInfo });
         router.push("/admin/dashboard")
       }
 
-      if(token && !userInfo.is_admin){
+      if(token && !userInfo.isAdmin){
         const response = await axios.get("/api/user") 
         set({currentLoginInfoUser:response.data})
         router.push("/client/dashboard")

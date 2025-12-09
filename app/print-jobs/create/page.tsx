@@ -21,10 +21,9 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Upload, X } from "lucide-react";
+import { FileText, Upload } from "lucide-react";
 import { ErrorBadge } from "@/components/error-badge";
 import axios from "@/lib/axios";
-import { User } from "@/lib/mock-data";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { PrintJobRequest as PrintRequest, paperSizeOptions, paperTypeOptions, typeReceiptOptions, copiesColors, tintColors } from "@/lib/types";
 import { useAppStore } from "@/app/stores/useAppStore";
@@ -40,15 +39,15 @@ const PrintRequestForm = () => {
 		name: "",
 		folio: "",
 		type_receipt_id: "",
-		paper_size: "0",
-		paper_type: "0",
+		paper_size: "1",
+		paper_type: "1",
 		quantity: 0,
 		copies_number: "",
 		copies_colors: [],
 		tint_colors: [],
 		file_path: new File([], ""),
 		description: "",
-		status: "1",
+		status: "waiting_acceptance",
 		created_at: "",
 		updated_at: "",
 	});
@@ -62,7 +61,6 @@ const PrintRequestForm = () => {
 		if(currentLoginInfoUser != null && token != null){
 			setIsLoading(false);
 		}
-		
 	}, [currentLoginInfoUser,token]);
 
 	const handleCheckboxChange = (
@@ -114,7 +112,6 @@ const PrintRequestForm = () => {
 	};
 
 	const handleSubmit = async () => {
-		console.log("Submitting form data:", formData);
 		const newErrors: string[] = [];
 		if (!formData.name)
 			newErrors.push("El campo 'Nombre de la solicitud' es obligatorio.");
@@ -122,14 +119,15 @@ const PrintRequestForm = () => {
 			newErrors.push("El campo 'Tipo' es obligatorio.");
 		if (formData.quantity <= 0)
 			newErrors.push("El campo 'Cantidad' debe ser mayor a cero.");
-		if (!formData.paper_size)
+		if (!formData.paper_size || formData.paper_size === "0")
 			newErrors.push("El campo 'Tamaño de papel' es obligatorio.");
-		if (!formData.paper_type)
+		if (!formData.paper_type || formData.paper_type === "0")
 			newErrors.push("El campo 'Tipo de papel' es obligatorio.");
-		if (!formData.file_path)
+		if (!formData.file_path || formData.file_path.size === 0)
 			newErrors.push("El campo 'Documento de impresión' es obligatorio.");
 		if (!formData.description)
 			newErrors.push("El campo 'Descripción' es obligatorio.");
+		
 		if (formData.type_receipt_id === "1") {
 			if (!formData.copies_number || parseInt(formData.copies_number) <= 0) {
 				newErrors.push(
@@ -150,57 +148,74 @@ const PrintRequestForm = () => {
 				);
 			}
 		}
+		
 		if (formData.tint_colors?.length === 0) {
 			newErrors.push("Debes seleccionar al menos un color de tinta.");
 		}
+		
 		setErrors(newErrors);
 
 		if (newErrors.length > 0) return;
-		console.log("info del cliente",currentLoginInfoUser)
+
 		if (!currentLoginInfoUser?.customer) {
 			return newErrors.push("No se pudo obtener la información del cliente.");
 		}
-    const form = new FormData();
 
-	form.append("customer_id", currentLoginInfoUser.customer.id);
-    form.append("name", formData.name);
-    form.append("type_receipt_id", formData.type_receipt_id);
-    form.append("paper_size", formData.paper_size);
-    form.append("paper_type", formData.paper_type);
-    form.append("quantity", String(formData.quantity));
-    form.append("description", formData.description);
-    form.append("file_path", formData.file_path);
+		const form = new FormData();
 
-    if (formData.type_receipt_id === "1") {
-        form.append("folio", formData.folio ?? "");
-        form.append("copies_number", formData.copies_number ?? "");
+		form.append("customer_id", currentLoginInfoUser.customer.id);
+		form.append("name", formData.name);
+		form.append("type_receipt_id", formData.type_receipt_id);
+		form.append("paper_size", formData.paper_size);
+		form.append("paper_type", formData.paper_type);
+		form.append("quantity", String(formData.quantity));
+		form.append("description", formData.description);
+		form.append("file_path", formData.file_path);
 
-        formData.copies_colors?.forEach((c) => {
-            form.append("copies_colors[]", String(c));
-        });
-    }
+		if (formData.type_receipt_id === "1") {
+			if (formData.folio) {
+				form.append("folio", formData.folio);
+			}
+			if (formData.copies_number) {
+				form.append("copies_number", formData.copies_number);
+			}
 
-    formData.tint_colors.forEach((t) => {
-        form.append("tint_colors[]", String(t));
-    });
+			formData.copies_colors?.forEach((c) => {
+				form.append("copies_colors[]", String(c));
+			});
+		}
 
-    try {
-        const response = await axios.post(
-            "/api/print-jobs",
-            form,
-            {
-                 headers: { Authorization: `Bearer ${token}` },
-            }
-        );
+		formData.tint_colors.forEach((t) => {
+			form.append("tint_colors[]", String(t));
+		});
 
-        if (response.status === 201) {
-            router.push("/client/dashboard");
-        }
-    } catch (error: any) {
-        console.error("Error al enviar la solicitud:", error);
-        console.log(error.response?.data);
-    }
-};
+		try {
+			const response = await axios.post(
+				"/api/print-jobs",
+				form,
+				{
+					headers: { 
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "multipart/form-data"
+					},
+				}
+			);
+
+			if (response.status === 201) {
+				router.push("/client/dashboard");
+			}
+		} catch (error: any) {
+			console.error("Error al enviar la solicitud:", error);
+			if (error.response?.data?.errors) {
+				const serverErrors = Object.values(error.response.data.errors).flat() as string[];
+				setErrors(serverErrors);
+			} else if (error.response?.data?.message) {
+				setErrors([error.response.data.message]);
+			} else {
+				setErrors(["Error al crear la solicitud. Por favor, intente de nuevo."]);
+			}
+		}
+	};
 
 	const handleCancel = () => {
 		setFormData({
@@ -209,18 +224,19 @@ const PrintRequestForm = () => {
 			name: "",
 			folio: "",
 			type_receipt_id: "",
-			paper_size: "0",
-			paper_type: "0",
+			paper_size: "1",
+			paper_type: "1",
 			quantity: 0,
 			copies_number: "",
 			copies_colors: [],
 			tint_colors: [],
 			file_path: new File([], ""),
 			description: "",
-			status: "1",
+			status: "waiting_acceptance",
 			created_at: "",
 			updated_at: "",
 		});
+		setErrors([]);
 	};
 
 	if (isLoading) {
@@ -237,10 +253,12 @@ const PrintRequestForm = () => {
 						</div>
 						<div>
 							<h1 className="text-xl font-bold">Crear solicitud</h1>
-							<p className="text-sm text-muted-foreground">Juan Pérez</p>
+							<p className="text-sm text-muted-foreground">
+								{currentLoginInfoUser?.name || "Usuario"}
+							</p>
 						</div>
 					</div>
-					<Button variant="outline">Cerrar Sesión</Button>
+					<Button variant="outline" onClick={logout}>Cerrar Sesión</Button>
 				</div>
 			</header>
 
@@ -325,12 +343,13 @@ const PrintRequestForm = () => {
 									<Input
 										id="quantity"
 										type="number"
+										min="1"
 										placeholder="Ingrese la cantidad"
-										value={formData.quantity}
+										value={formData.quantity || ""}
 										onChange={(e) =>
 											setFormData({
 												...formData,
-												quantity: parseInt(e.target.value),
+												quantity: parseInt(e.target.value) || 0,
 											})
 										}
 										required
@@ -349,6 +368,7 @@ const PrintRequestForm = () => {
 												id="copies_number"
 												type="number"
 												min="1"
+												max="4"
 												placeholder="0"
 												value={formData.copies_number}
 												onChange={(e) =>
@@ -383,6 +403,9 @@ const PrintRequestForm = () => {
 											</span>{" "}
 											<span className="text-red-500">*</span>
 										</Label>
+										{colorErrors.copies_colors && (
+											<p className="text-sm text-red-500">{colorErrors.copies_colors}</p>
+										)}
 										<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
 											{Object.entries(copiesColors).map(([key, value]) => (
 												<div key={key} className="flex items-center space-x-2">
@@ -469,6 +492,7 @@ const PrintRequestForm = () => {
 									<Input
 										id="file_path"
 										type="file"
+										accept=".pdf"
 										onChange={handleFileChange}
 										className="hidden"
 										required
@@ -478,9 +502,9 @@ const PrintRequestForm = () => {
 										className="flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
 									>
 										<Upload className="h-4 w-4" />
-										Selecciona un archivo
+										Selecciona un archivo (PDF)
 									</Label>
-									{formData.file_path && (
+									{formData.file_path && formData.file_path.size > 0 && (
 										<span className="text-sm text-muted-foreground">
 											{formData.file_path.name}
 										</span>
@@ -510,6 +534,9 @@ const PrintRequestForm = () => {
 									<span className="text-gray-600">(máximo 4)</span>{" "}
 									<span className="text-red-500">*</span>
 								</Label>
+								{colorErrors.tint_colors && (
+									<p className="text-sm text-red-500">{colorErrors.tint_colors}</p>
+								)}
 								<div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
 									{Object.entries(tintColors).map(([key, value]) => (
 										<div key={key} className="flex items-center space-x-2">

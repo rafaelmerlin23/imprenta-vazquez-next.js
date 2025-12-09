@@ -1,19 +1,17 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { LogOut, FileText, Plus } from "lucide-react";
 import { RequestsTable } from "@/components/requests-table";
 import axios from "@/lib/axios";
-import { User } from "@/lib/mock-data";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useAppStore } from "@/app/stores/useAppStore";
 import { useRouter } from "next/navigation"

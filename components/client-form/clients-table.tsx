@@ -26,7 +26,7 @@ export function ClientsTable() {
   
   const handleConfirmDelete =async ()=>{
     setIsDeleting(true);
-    const response = await axios.delete(`api/customers/${clientSelected?.id}`)
+    const response = await axios.delete(`/api/customers/${clientSelected?.id}`)
     .then(
       ()=>{
         setClientSelected(null);
@@ -114,7 +114,11 @@ export function ClientsTable() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button onClick={()=> setFormClientState(FormState.Edit)} variant="ghost" size="sm">
+                    <Button onClick={()=> {
+                      setClientIdSelected(client.id)
+                      setFormClientState(FormState.Edit)
+                      setClientStatus(ClientStatus.Edit)
+                    }} variant="ghost" size="sm">
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button onClick={()=>{
@@ -125,7 +129,7 @@ export function ClientsTable() {
                     </Button>
                     <Button onClick={()=> {
                       setClientIdSelected(client.id)
-                      setFormClientState(FormState.Edit);
+                      setFormClientState(FormState.Show);
                       setClientStatus(ClientStatus.Show);
                     }} variant="ghost" size="sm">
                       <Eye className="h-4 w-4" />

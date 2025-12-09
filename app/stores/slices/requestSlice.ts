@@ -13,7 +13,6 @@ import { ClientSlice } from "./clientSlice"
 
 export interface RequestSlice{
     requests: PrintRequest[] | any,
-    isLoadRequests: boolean,
     getRequests:(setIsLoading:Function)=> Promise<void> 
 }
 
@@ -24,14 +23,13 @@ export const CreateRequestSlice: StateCreator<
   RequestSlice
 > = (set, get) => ({
     requests: [],
-    isLoadRequests:false,
+
     getRequests: async (isLoading) => {
     try {
         const response = await axios.get("/api/print-jobs")
 
-        set({requests: response.data,isLoadRequests:true})
+        set({requests: response.data})
         isLoading(false);
-        
     } catch (error) {
         console.error("ERROR GET PRINT JOBS:", error)
     }

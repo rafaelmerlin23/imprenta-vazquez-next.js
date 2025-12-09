@@ -12,6 +12,7 @@
  
   import {FormClient} from "@/components/client-form/form-client"
   import {CreateClient} from "@/components/client-form/add-client"
+  import { EditClient } from "@/components/client-form/edit-client"
   import {useAppStore } from "@/app/stores//useAppStore"
   import { useRouter } from "next/navigation"
 import LoadingSpinner from "@/components/ui/loading-spinner"
@@ -54,26 +55,26 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
     `
 
 
-  useEffect(() => {
-      const handlePopState = () => {
-        if (clientStatus !== ClientStatus.ShowAll) {
-          setClientStatus(ClientStatus.ShowAll);
+	useEffect(() => {
+		const handlePopState = () => {
+			if (clientStatus !== ClientStatus.ShowAll) {
+				setClientStatus(ClientStatus.ShowAll);
 
-          window.history.pushState(null, "", window.location.href);
-        }
-      };
-      
-      window.addEventListener('popstate', handlePopState);
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }, [clientStatus]);
+				window.history.pushState(null, "", window.location.href);
+			}
+		};
 
-    useEffect(() => {
-      if (clientStatus !== ClientStatus.ShowAll) {
-        window.history.pushState({ clientStatus }, "", window.location.href);
-      }
-    }, [clientStatus]);
+		window.addEventListener("popstate", handlePopState);
+		return () => {
+			window.removeEventListener("popstate", handlePopState);
+		};
+	}, [clientStatus]);
+
+	useEffect(() => {
+		if (clientStatus !== ClientStatus.ShowAll) {
+			window.history.pushState({ clientStatus }, "", window.location.href);
+		}
+	}, [clientStatus]);
 
     useEffect(()=>{
         getClients()
@@ -90,40 +91,42 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
       }
 
 
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b bg-card">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary p-2">
-                <FileText className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Panel de Administración</h1>
-                <p className="text-sm text-muted-foreground">Gestiona clientes y solicitudes</p>
-              </div>
-            </div>
-            <Link href="/">
-              <Button onClick={()=>closeSession()} variant="outline">
-                <LogOut className="mr-2 h-4 w-4" />
-                Cerrar Sesión
-              </Button>
-            </Link>
-          </div>
-        </header>
+	return (
+		<div className="min-h-screen bg-background">
+			<header className="border-b bg-card">
+				<div className="container mx-auto flex items-center justify-between px-4 py-4">
+					<div className="flex items-center gap-3">
+						<div className="rounded-lg bg-primary p-2">
+							<FileText className="h-6 w-6 text-primary-foreground" />
+						</div>
+						<div>
+							<h1 className="text-xl font-bold">Panel de Administración</h1>
+							<p className="text-sm text-muted-foreground">
+								Gestiona clientes y solicitudes
+							</p>
+						</div>
+					</div>
+					<Link href="/">
+						<Button onClick={() => closeSession()} variant="outline">
+							<LogOut className="mr-2 h-4 w-4" />
+							Cerrar Sesión
+						</Button>
+					</Link>
+				</div>
+			</header>
 
-        <main className="container mx-auto px-4 py-8">
-          <Tabs defaultValue="requests" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="requests" className="gap-2">
-                <FileText className="h-4 w-4" />
-                Solicitudes
-              </TabsTrigger>
-              <TabsTrigger value="clients" className="gap-2">
-                <Users className="h-4 w-4" />
-                Clientes
-              </TabsTrigger>
-            </TabsList>
+			<main className="container mx-auto px-4 py-8">
+				<Tabs defaultValue="requests" className="space-y-6">
+					<TabsList className="grid w-full max-w-md grid-cols-2">
+						<TabsTrigger value="requests" className="gap-2">
+							<FileText className="h-4 w-4" />
+							Solicitudes
+						</TabsTrigger>
+						<TabsTrigger value="clients" className="gap-2">
+							<Users className="h-4 w-4" />
+							Clientes
+						</TabsTrigger>
+					</TabsList>
 
             <TabsContent value="requests" className="space-y-6">
               <div className="grid gap-4 md:grid-cols-4">
@@ -199,6 +202,10 @@ import LoadingSpinner from "@/components/ui/loading-spinner"
                   case ClientStatus.Create:
                     return  (
                     <CreateClient/>
+                    )
+                  case ClientStatus.Edit:
+                    return (
+                      <EditClient/>
                     )
                   default:
                     return (

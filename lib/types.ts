@@ -43,7 +43,7 @@ export interface CustomerAddress {
   deleted_at: any
 }
 
-export interface UserApi {
+export interface User {
   id: string
   is_admin: boolean
   username: string
@@ -53,35 +53,6 @@ export interface UserApi {
   created_at: string
   updated_at: string
   deleted_at: any
-  customer: Customer | null
-}
-
-
-export function mapUser(api: UserApi): User {
-  return {
-    id: api.id,
-    isAdmin: api.is_admin,
-    username: api.username,
-    email: api.email,
-    role: api.role,
-    emailVerifiedAt: api.email_verified_at,
-    createdAt: api.created_at,
-    updatedAt: api.updated_at,
-    deletedAt: api.deleted_at,
-    customer: api.customer,
-  }
-}
-
-export interface User {
-  id: string
-  isAdmin: boolean
-  username: string
-  email: string
-  role: UserRole
-  emailVerifiedAt: any
-  createdAt: string
-  updatedAt: string
-  deletedAt: any
   customer: Customer | null
 }
 

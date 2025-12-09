@@ -240,7 +240,7 @@ const PrintJobRequestEdit = () => {
 
 					<Button
 						variant="outline"
-						onClick={() => router.push(user?.isAdmin ? "/admin/dashboard" : "/client/dashboard")}
+						onClick={() => router.push(user?.is_admin ? "/admin/dashboard" : "/client/dashboard")}
 					>
 						Volver
 					</Button>

@@ -222,7 +222,7 @@ const PrintJobRequestShow = () => {
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => router.push(user?.isAdmin ? "/admin/dashboard" : "/client/dashboard")}
+							onClick={() => router.push(user?.is_admin ? "/admin/dashboard" : "/client/dashboard")}
 							className="rounded-full"
 						>
 							<ArrowLeft className="h-5 w-5" />
@@ -248,7 +248,7 @@ const PrintJobRequestShow = () => {
 
 					<div className="flex items-center gap-2">
 						{/* Botón de agregar pago - solo si hay saldo pendiente y está accepted/in_progress */}
-						{!user?.isAdmin &&
+						{!user?.is_admin &&
 							getRemainingAmount() > 0 &&
 							!data.is_paid &&
 							(data.status === "accepted" || data.status === "in_progress") && (
@@ -274,7 +274,7 @@ const PrintJobRequestShow = () => {
 			</header>
 
 			<main className="container mx-auto max-w-6xl px-4 py-8">
-				{data.status === "declined" && !user?.isAdmin && (
+				{data.status === "declined" && !user?.is_admin && (
 					<div className="mb-6">
 						<RejectionAlert
 							requestId={data.id}

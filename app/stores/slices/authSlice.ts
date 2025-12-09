@@ -1,6 +1,6 @@
 import axios from "@/lib/axios"
 import type { StateCreator } from "zustand"
-import { ClientStatus, User, mapUser } from "@/lib/types"
+import { ClientStatus, User } from "@/lib/types"
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import { useAppStore } from "@/app/stores/useAppStore"
 import { ClientSlice } from "./clientSlice"
@@ -44,24 +44,25 @@ export const createAuthSlice: StateCreator<
       set({ isLoading: true, error: null })
       const { user, password } = get()
       
+      // Always fetch a fresh CSRF cookie before login
       await axios.get("/sanctum/csrf-cookie")
 
       const response = await axios.post("/api/login", { username:user, password:password })
       console.log(response)
       
       const token = response.data?.token?.toString()
-      const userInfo = mapUser(response.data.user)
+      const userInfo = response.data.user
       
       if (token) {
         set({ token, isLogged: true })
       }
 
-      if (token && userInfo.isAdmin) {
+      if (token && userInfo.is_admin) {
         set({ currentLoginInfoUser: userInfo });
         router.push("/admin/dashboard")
       }
 
-      if(token && !userInfo.isAdmin){
+      if(token && !userInfo.is_admin){
         const response = await axios.get("/api/user") 
         set({currentLoginInfoUser:response.data})
         router.push("/client/dashboard")
@@ -69,27 +70,40 @@ export const createAuthSlice: StateCreator<
 
     } catch (err) {
       console.error("Login error", err)
+      set({ error: "Error al iniciar sesión. Por favor intenta de nuevo." })
     }finally{
         set({isLoading:false})
     }
   },
 
 logout: async (router) => {
-  axios.post("/api/logout").then(()=>{
+  try {
+    await axios.post("/api/logout")
     
-  }).finally(()=>{
-  set({
-    token: null,
-    currentLoginInfoUser: null,
-    isLogged: false,
-    requests: [],
-    clients: [],
-    clientStatus: ClientStatus.ShowAll
-  })
+    set({
+      token: null,
+      currentLoginInfoUser: null,
+      isLogged: false,
+      requests: [],
+      clients: [],
+      clientStatus: ClientStatus.ShowAll
+    })
 
     useAppStore.persist.clearStorage()
     router.replace("/")
-  })
-
+  } catch (err) {
+    console.error("Logout error", err)
+    // Even if logout fails on server, clear local state
+    set({
+      token: null,
+      currentLoginInfoUser: null,
+      isLogged: false,
+      requests: [],
+      clients: [],
+      clientStatus: ClientStatus.ShowAll
+    })
+    useAppStore.persist.clearStorage()
+    router.replace("/")
+  }
 }
 })

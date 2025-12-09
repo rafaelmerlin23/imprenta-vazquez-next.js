@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { createAuthSlice, AuthSlice } from "./slices/authSlice"
 import { createClientSlice, ClientSlice } from "./slices/clientSlice"
-import { CreateRequestSlice,RequestSlice} from "./slices/requestSlice"
+import { CreateRequestSlice, RequestSlice } from "./slices/requestSlice"
 
 type StoreState = AuthSlice & ClientSlice & RequestSlice
 

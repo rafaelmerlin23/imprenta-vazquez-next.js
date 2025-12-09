@@ -14,7 +14,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       className: "bg-gray-100 text-gray-700 border-gray-300",
     },
     "waiting_acceptance": {
-      label: !user?.isAdmin ? "Esperando aceptación" : "Solicitada",
+      label: !user?.is_admin ? "Esperando aceptación" : "Solicitada",
       variant: "secondary" as const,
       className: "bg-blue-100 text-blue-700 border-blue-300",
     },

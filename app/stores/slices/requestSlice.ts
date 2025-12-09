@@ -1,46 +1,53 @@
-// const getRequest = async () => {
-//         const response = await axios.get("/api/print-jobs", {
-//         })
-        
-//       }
-
 import axios from "@/lib/axios"
 import type { StateCreator } from "zustand"
-import { PrintRequest, User } from "@/lib/types"
-import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
+import { PrintRequest} from "@/lib/types"
 import { AuthSlice } from "./authSlice"
 import { ClientSlice } from "./clientSlice"
 
-export interface RequestSlice{
+export interface RequestSlice {
     requests: PrintRequest[] | any,
-    isLoadRequests:boolean,
-    getRequests:(setIsLoading:Function)=> Promise<void> 
+    isLoadRequests: boolean,
+    getRequests: (setIsLoading: Function) => Promise<void>
 }
 
 export const CreateRequestSlice: StateCreator<
-  AuthSlice & ClientSlice & RequestSlice,
-  [],
-  [],
-  RequestSlice
+    AuthSlice & ClientSlice & RequestSlice,
+    [],
+    [],
+    RequestSlice
 > = (set, get) => ({
     requests: [],
-    isLoadRequests:false,
+    isLoadRequests: false,
 
-    getRequests: async (isLoading) => {
-    try {
-        const { isLogged, token } = get()
+    getRequests: async (setIsLoading) => {
+        try {
+            const { token } = get()
 
-        if (!isLogged || !token) return;
-        console.log("justamento esto se ejecuto")
-        const response = await axios.get("/api/print-jobs")
+            // Verificar solo el token, no isLogged
+            if (!token) {
+                console.log("No hay token disponible")
+                setIsLoading(false)
+                return
+            }
 
-        set({ requests: response.data, isLoadRequests: true })
-        isLoading(false);
-    } 
-    catch (error) {
-        console.error("ERROR GET PRINT JOBS:", error)
+            console.log("Cargando solicitudes...")
+
+            const response = await axios.get("/api/print-jobs", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            set({
+                requests: response.data,
+                isLoadRequests: true
+            })
+
+            setIsLoading(false)
+            console.log("Solicitudes cargadas:", response.data.length)
+
+        } catch (error) {
+            console.error("ERROR GET PRINT JOBS:", error)
+            setIsLoading(false)
+            set({ isLoadRequests: false })
+        }
     }
-    }
-
-
 })

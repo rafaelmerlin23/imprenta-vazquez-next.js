@@ -31,4 +31,19 @@ axios.interceptors.request.use((config) => {
     return config
 })
 
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.log("Token inválido o expirado")
+        }
+        
+        if (error.response?.status === 419) {
+            console.log("Token CSRF expirado o inválido")
+        }
+        
+        return Promise.reject(error)
+    }
+)
+
 export default axios

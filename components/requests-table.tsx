@@ -420,7 +420,7 @@ export function RequestsTable({ requests }: RequestsTableProps) {
 												<ArrowRightToLineIcon className="h-4 w-4" />
 											</Button>
 										)}
-										{user.is_adminn && (
+										{user.is_admin && (
 											<Button
 												onClick={() => handleDeleteClick(request)}
 												variant="danger"

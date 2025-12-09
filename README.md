@@ -91,32 +91,20 @@ git clone https://github.com/rafaelmerlin23/imprenta-vazquez-next.js.git
 cd imprenta-vazquez-next.js
 ```
 
-2. Instala las dependencias:
-```bash
-# Con npm
-npm install
+2. Configura las variables de entorno (ver sección [Configuración](#configuración))
 
-# Con yarn
-yarn install
-
-# Con pnpm (recomendado)
-pnpm install
-```
-
-3. Configura las variables de entorno (ver sección [Configuración](#configuración))
-
-4. Inicia el servidor de desarrollo:
+3. Inicia el servidor de desarrollo:
 ```bash
 npm run dev
 # o
 pnpm dev
 ```
 
-5. Abre [http://localhost:3000](http://localhost:3000) en tu navegador
+4. Abre [http://localhost:3000](http://localhost:3000) en tu navegador
 
 ## Configuración
 
-Crea un archivo `.env.local` en la raíz del proyecto:
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 # URL del backend API
@@ -451,12 +439,6 @@ NODE_ENV=production
 ```
 
 ## Características Adicionales
-
-### Tema Oscuro
-El sistema soporta modo oscuro usando `next-themes`:
-```typescript
-import { ThemeProvider } from "@/components/theme-provider"
-```
 
 ### Validación de Formularios
 Esquemas de validación con Zod en `lib/validations/`:

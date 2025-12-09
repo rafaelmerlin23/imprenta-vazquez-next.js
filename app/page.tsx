@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +15,7 @@ import { useAppStore } from "./stores/useAppStore"
 export default function HomePage() {
   const router = useRouter();
   const {currentLoginInfoUser,isLogged ,user, password, setUser, setPassword, login} = useAppStore()
+  const [error,setError] = useState("")
 
   useEffect(() => {
     if(isLogged){
@@ -24,14 +25,16 @@ export default function HomePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(router)
+    
+    try{
+      await login(router)
+    }catch(e){
+      setError("error we")
+    }
+
   }
   
-  // useEffect(()=>{
-  //   console.log(user,password)
-  // },[user,password])
   
-
   return (
     
     <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent/5">
@@ -52,7 +55,7 @@ export default function HomePage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Correo electrónico</Label>
+                  <Label htmlFor="username">Nombre de usuario</Label>
                   <Input
                     id="text"
                     type="text"
@@ -76,6 +79,7 @@ export default function HomePage() {
                 <Button  type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-black" size="lg">
                   Iniciar Sesión
                 </Button>
+                {error}
               </form>
             </CardContent>
           </Card>

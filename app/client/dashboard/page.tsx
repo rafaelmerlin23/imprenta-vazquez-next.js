@@ -15,24 +15,22 @@ import { RequestsTable } from "@/components/requests-table";
 import axios from "@/lib/axios";
 import { User } from "@/lib/mock-data";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useAppStore } from "@/app/stores/useAppStore";
+import { useRouter } from "next/navigation"
 
 export default function ClientDashboard() {
 	const [requests, setRequests] = useState([]);
-	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const {logout,token,currentLoginInfoUser} = useAppStore()
+	const router = useRouter()
 
 	const fetchRequests = async () => {
 		try {
 			setIsLoading(true);
-			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_BACKEND_URL}api/print-jobs`,
-				{
-					withCredentials: true,
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("token")}`,
-					},
-				}
-			);
+			const response = await axios.get("/api/print-jobs", {
+        	headers: { Authorization: `Bearer ${token}` },
+      		})
+			console.log("respuesta ",response)
 			setRequests(response.data);
 		} catch (error) {
 			console.error("Error fetching print job requests:", error);
@@ -41,33 +39,12 @@ export default function ClientDashboard() {
 		}
 	};
 
-	const fetchUser = async () => {
-		try {
-			setIsLoading(true);
-			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_BACKEND_URL}api/user`,
-				{
-					withCredentials: true,
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("token")}`,
-					},
-				}
-			);
-			setUser(response.data);
-		} catch (error) {
-			console.error("Error fetching print job requests:", error);
-		} finally {
-			setIsLoading(false);
-		}
-	};
 
 	useEffect(() => {
-		const fetchData = async () => {
-			await fetchRequests();
-			await fetchUser();
-		};
-		fetchData();
-	}, []);
+		if(token!= null && currentLoginInfoUser != null){
+			fetchRequests();
+		}
+	}, [token,currentLoginInfoUser]);
 
 	if (isLoading) {
 		return <LoadingSpinner />;
@@ -83,12 +60,14 @@ export default function ClientDashboard() {
 						</div>
 						<div>
 							<h1 className="text-xl font-bold">Mis Solicitudes</h1>
-							<p className="text-sm text-muted-foreground">{user?.customer?.business_name}</p>
+							<p className="text-sm text-muted-foreground">{currentLoginInfoUser?.customer?.business_name}</p>
 						</div>
 					</div>
 					<Link href="/">
 						<Button variant="outline">
-							<LogOut className="mr-2 h-4 w-4" />
+							<LogOut 
+							onClick={()=> logout(router)}
+							className="mr-2 h-4 w-4" />
 							Cerrar Sesión
 						</Button>
 					</Link>
@@ -112,7 +91,7 @@ export default function ClientDashboard() {
 						</Link>
 					</CardHeader>
 					<CardContent>
-						<RequestsTable requests={requests} isAdmin={user?.is_admin ?? false} />
+						<RequestsTable requests={requests} isAdmin={currentLoginInfoUser?.is_admin ?? false} />
 					</CardContent>
 				</Card>
 			</main>

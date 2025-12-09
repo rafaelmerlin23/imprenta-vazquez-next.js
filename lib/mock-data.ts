@@ -87,3 +87,10 @@ export interface PrintRequest {
   updated_at: string
   customer?: Customer
 }
+
+interface hola{
+  status:string
+}
+export const mockRequests:PrintRequest[]|any = [] 
+
+export const mockUsers:hola[] = [] 

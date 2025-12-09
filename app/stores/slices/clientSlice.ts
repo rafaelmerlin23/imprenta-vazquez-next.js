@@ -20,6 +20,7 @@ export interface ClientSlice {
   setFormClientState: (clientFormState:FormState)=> void
   getClients: () => Promise<void>
   getClient: () => Promise<void>
+  deleteClient:(client:Client)=> void
 }
 
 export const createClientSlice: StateCreator<
@@ -58,6 +59,14 @@ export const createClientSlice: StateCreator<
       console.error("Error loading clients", err)
     }
   },
+  deleteClient: (client: Client) => {
+  const { clients } = get()
+  
+  const updatedClients = clients.filter(c => c.id !== client.id)
+  
+  set({ clients: updatedClients })
+},
+
 
   getClient: async () => {
     const { clientIdSelected, detailsOfViewedCustomers, token } = get()

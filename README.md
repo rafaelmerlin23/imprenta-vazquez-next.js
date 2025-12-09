@@ -21,6 +21,14 @@ Sistema web desarrollado con Next.js para la gestión integral de solicitudes de
 
 ## Características
 
+### Cumplimiento de las WCAG 2.1
+- 1.3.4 Orientation (AA)
+  El contenido puede visualizarse y utilizarse tanto en orientación vertical como horizontal. No se obliga a una orientación específica,
+  permitiendo que el usuario mantenga la que le resulte más cómoda o necesaria.
+- 1.4.1 Use of Color (A)
+  El color no se utiliza como el único medio para transmitir información, indicar acciones o distinguir elementos.
+  Siempre existe un soporte adicional como texto, iconos o patrones.
+
 ### Panel de Administración
 - Gestión completa de clientes registrados
 - Seguimiento de solicitudes de impresión por estado

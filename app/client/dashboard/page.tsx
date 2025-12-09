@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation"
 export default function ClientDashboard() {
 	const [requests, setRequests] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const {logout,token,currentLoginInfoUser} = useAppStore()
+	const {logout,token,currentLoginInfoUser,isLogged} = useAppStore()
 	const router = useRouter()
 
 	const fetchRequests = async () => {
@@ -39,12 +39,12 @@ export default function ClientDashboard() {
 
 
 	useEffect(() => {
-		const fetchData = async () => {
-			await fetchRequests();
-		};
+		console.log("esta cargando we",isLoading)
 		if(token!= null && currentLoginInfoUser != null){
-			fetchData();
+			fetchRequests();
 		}
+
+		console.log("está logead",isLogged)
 	}, [token,currentLoginInfoUser]);
 
 	if (isLoading) {
@@ -64,14 +64,16 @@ export default function ClientDashboard() {
 							<p className="text-sm text-muted-foreground">{currentLoginInfoUser?.customer?.business_name}</p>
 						</div>
 					</div>
-					<Link href="/">
-						<Button variant="outline">
+					
+						<Button
+						onClick={()=> logout(router)}
+						variant="outline">
 							<LogOut 
-							onClick={()=> logout(router)}
+							
 							className="mr-2 h-4 w-4" />
 							Cerrar Sesión
 						</Button>
-					</Link>
+					
 				</div>
 			</header>
 
@@ -92,7 +94,7 @@ export default function ClientDashboard() {
 						</Link>
 					</CardHeader>
 					<CardContent>
-						<RequestsTable requests={requests} />
+						<RequestsTable requests={requests}  />
 					</CardContent>
 				</Card>
 			</main>

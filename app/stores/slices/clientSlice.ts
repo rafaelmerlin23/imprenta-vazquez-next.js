@@ -21,6 +21,7 @@ export interface ClientSlice {
   getClients: () => Promise<void>
   getClient: () => Promise<void>
   deleteClient:(client:Client)=> void
+  updateClient:(id:number, data: any)=> Promise<void>
 }
 
 export const createClientSlice: StateCreator<
@@ -37,12 +38,14 @@ export const createClientSlice: StateCreator<
   formClientState:FormState.Show,
   detailsOfViewedCustomers: [],
   selectedTab:"Address",
+
   setSelectedTab:(selectedTab)=>set({selectedTab}),
   setClients:(clients)=>set({clients}),
   setClientStatus: (status) => set({ clientStatus: status }),
   setClientIdSelected: (id) => set({ clientIdSelected: id }),
   setClient: (client) => set({ client }),
   setFormClientState:(clientFormState)=>set({formClientState:clientFormState}),
+
   getClients: async () => {
     try {
       const {clients}= get()
@@ -68,13 +71,23 @@ export const createClientSlice: StateCreator<
 },
 
 
+
   getClient: async () => {
     const { clientIdSelected, detailsOfViewedCustomers, token } = get()
     set({ isLoading: true })
 
-    const cached = detailsOfViewedCustomers.find(
-      (d) => d.id === clientIdSelected
+    if (!clientIdSelected || clientIdSelected === 0) {
+      set({ isLoading: false, client: null });
+      return;
+    }
+
+    const safeDetails = detailsOfViewedCustomers.filter(
+      (d) => d && typeof d === "object" && "id" in d
     )
+
+    set({ detailsOfViewedCustomers: safeDetails })
+
+    const cached = safeDetails.find((d) => d.id === clientIdSelected)
     if (cached) {
       set({ client: cached, isLoading: false })
       return
@@ -95,6 +108,54 @@ export const createClientSlice: StateCreator<
       console.error("Error loading client", err)
     } finally {
       set({ isLoading: false })
+    }
+  },
+
+  updateClient: async (id: number, data: any) => {
+    try {
+      const token = get().token
+      
+      await axios.put(`/api/customers/${id}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      const refreshed = await axios.get(`/api/customers/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      const updatedClient = refreshed.data.data
+
+      const { clients, detailsOfViewedCustomers } = get()
+
+      const newClients = clients.map((c) =>
+        c.id === id ? updatedClient : c
+      )
+
+      const newDetails = detailsOfViewedCustomers.map((d) =>
+        d?.id === id ? updatedClient : d
+      )
+
+      set({ clients: newClients, detailsOfViewedCustomers: newDetails, client: updatedClient })
+      return updatedClient
+      /*
+      const updatedClients = clients.map(c => 
+        c.id === id ? { ...c, ...updatedClient } : c
+      )
+      set({ clients: updatedClients })
+
+      set({ client: updatedClient })
+
+      const { detailsOfViewedCustomers } = get()
+      const updatedDetails = detailsOfViewedCustomers.map(d =>
+        d.id === id ? updatedClient : d
+      )
+      set({ detailsOfViewedCustomers: updatedDetails })
+
+      return updatedClient
+      */
+    } catch (err) {
+      console.error("Error updating client", err)
+      throw err
     }
   },
 })

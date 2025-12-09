@@ -1,18 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import {Spinner} from "@/components/ui/spinner"
 import {FieldGroup} from "@/components/ui/field"
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from "@/components/ui/button"
-import { Pen,X,Check} from "lucide-react"
+import { X} from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppStore } from "@/app/stores/useAppStore"
-import { FormState,ClientStatus} from "@/lib/types"
+import { FormState,ClientStatus, PrintRequest} from "@/lib/types"
 import { TextFieldClient } from "./text-field-client"
+import { RequestsTable } from "../requests-table"
 
 export function FormClient(){
-    const {setSelectedTab,selectedTab,clientStatus,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
-    
+    const {setSelectedTab,selectedTab,setClientStatus,clientStatus,getClient, client,isLoading,requests,isLoadRequests} = useAppStore()
+    const [filterRequests,setFilterRequest] = useState<PrintRequest[] | any>([])
     const goToAddress=()=>{
         setSelectedTab("Address")
     }
@@ -21,7 +22,15 @@ export function FormClient(){
         if(ClientStatus.Create != clientStatus){
             getClient()
         }
+
     }, [])
+
+    useEffect(()=>
+    {
+        if(isLoadRequests ){
+            setFilterRequest([...requests.filter((r:PrintRequest)=> r.customer?.id == client?.id)])
+        }
+    },[isLoadRequests,client])
     
     return(
         <>
@@ -34,6 +43,11 @@ export function FormClient(){
             <CardTitle>Detalle de cliente </CardTitle>
             <CardDescription>Visualiza la información del cliente {client?.business_name} </CardDescription>
             </div>
+                  <Button onClick={()=>{
+                    setClientStatus(ClientStatus.ShowAll)
+                    }} variant="ghost" size="lg">
+                      <X className="h-20 w-20 text-lg text-black" />
+                    </Button>
             </CardHeader>
             <CardContent>
                 <Card>
@@ -71,7 +85,7 @@ export function FormClient(){
                                         Nombre de usuario
                                     </p>
                                     <p className="">
-                                        {client?.user.name}
+                                        {client?.user.username}
                                     </p>
                                     
                             </div>
@@ -98,7 +112,7 @@ export function FormClient(){
                                 Dirección
                                 </TabsTrigger>
                                 <TabsTrigger  value="Requests" className="gap-2">
-                                Solicitudes
+                                    Solicitudes
                                 </TabsTrigger>
                                 <TabsTrigger   value="Jobs" className="gap-2">
                                 Trabajos realizados
@@ -106,7 +120,7 @@ export function FormClient(){
                                 
                             </TabsList>
                         <TabsContent value="Requests" className="space-y-6">
-                            solcitudes
+                                 <RequestsTable requests={filterRequests} />
                         </TabsContent>
                         <TabsContent value="Address" className="space-y-6">
                            <Card className="mt-0">

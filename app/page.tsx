@@ -29,7 +29,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isLogged) {
-      currentLoginInfoUser?.isAdmin 
+      currentLoginInfoUser?.is_admin 
         ? router.push("/admin/dashboard") 
         : router.push("/client/dashboard")
     }
@@ -44,7 +44,13 @@ export default function HomePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(router)
+    
+    try{
+      await login(router)
+    }catch(e){
+      setError("error we")
+    }
+
   }
 
   const handleCloseErrorDialog = () => {

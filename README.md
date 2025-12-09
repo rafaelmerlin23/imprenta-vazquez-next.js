@@ -22,12 +22,27 @@ Sistema web desarrollado con Next.js para la gestión integral de solicitudes de
 ## Características
 
 ### Cumplimiento de las WCAG 2.1
-- 1.3.4 Orientation (AA)
+- 1.3.4 Orientation (AA) : 
   El contenido puede visualizarse y utilizarse tanto en orientación vertical como horizontal. No se obliga a una orientación específica,
   permitiendo que el usuario mantenga la que le resulte más cómoda o necesaria.
-- 1.4.1 Use of Color (A)
+- 1.4.1 Use of Color (A) : 
   El color no se utiliza como el único medio para transmitir información, indicar acciones o distinguir elementos.
   Siempre existe un soporte adicional como texto, iconos o patrones.
+- 1.4.3 Contrast (Minimum) (AA) : 
+  El texto y los elementos esenciales mantienen una relación de contraste mínima de 4.5:1,
+  mejorando la legibilidad para personas con baja visión o en condiciones de luminosidad adversas.
+- 1.4.12 Text Spacing (AA) : 
+  El contenido se mantiene funcional y sin pérdida de información incluso cuando el usuario aumenta el interlineado,
+  espaciado entre texto o separación entre párrafos.
+- 2.4.2 Page Titled (A) : 
+  Cada página posee un título descriptivo y significativo que permite identificar rápidamente su propósito,
+  mejorando la navegación y la comprensión general.
+- 2.4.6 Headings and Labels (AA) : 
+  Los encabezados y etiquetas describen claramente el contenido o la función del elemento asociado,
+  ayudando a la orientación del usuario y a la navegación con tecnologías asistivas.
+- 2.4.12 Focus Not Obscured (Enhanced) (AAA) : 
+El indicador de foco nunca queda oculto por otros elementos de la interfaz, asegurando que el usuario siempre pueda ver qué elemento está seleccionado.
+  
 
 ### Panel de Administración
 - Gestión completa de clientes registrados

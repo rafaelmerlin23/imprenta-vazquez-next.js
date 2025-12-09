@@ -41,11 +41,8 @@ export default function ClientDashboard() {
 
 
 	useEffect(() => {
-		const fetchData = async () => {
-			await fetchRequests();
-		};
 		if(token!= null && currentLoginInfoUser != null){
-			fetchData();
+			fetchRequests();
 		}
 	}, [token,currentLoginInfoUser]);
 
@@ -94,7 +91,7 @@ export default function ClientDashboard() {
 						</Link>
 					</CardHeader>
 					<CardContent>
-						<RequestsTable requests={requests} isAdmin={currentLoginInfoUser?.isAdmin ?? false} />
+						<RequestsTable requests={requests} isAdmin={currentLoginInfoUser?.is_admin ?? false} />
 					</CardContent>
 				</Card>
 			</main>

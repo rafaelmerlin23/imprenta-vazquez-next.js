@@ -28,8 +28,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
     try {
       const { user, password } = get()     
       await axios.get("/sanctum/csrf-cookie")
-      console.log(user,password)
-      
+
       const response = await axios.post("/api/login", { username:user, password:password })
       console.log(response)
       
@@ -41,15 +40,13 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
         
       }
 
-      if (token && userInfo.isAdmin) {
+      if (token && userInfo.is_admin) {
         set({ currentLoginInfoUser: userInfo });
         router.push("/admin/dashboard")
       }
 
-      if(token && !userInfo.isAdmin){
-        const response = await axios.get("/api/user", {
-        headers: { Authorization: `Bearer ${token}` },
-        }) 
+      if(token && !userInfo.is_admin){
+        const response = await axios.get("/api/user") 
         set({currentLoginInfoUser:response.data})
         router.push("/client/dashboard")
       }
@@ -60,9 +57,13 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set,get) => ({
   },
 
 logout: async (router) => {
-  set({currentLoginInfoUser:null})
-  set({token:null})
-  set({isLogged:false})
-  localStorage.removeItem("app-storage");
+  axios.post("/api/logout").then(()=>{
+    set({currentLoginInfoUser:null})
+    set({token:null})
+    set({isLogged:false})
+    localStorage.removeItem("app-storage");
+    router.replace("/")
+  })
+ 
 }
 })

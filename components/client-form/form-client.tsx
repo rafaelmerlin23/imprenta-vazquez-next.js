@@ -4,14 +4,14 @@ import {Spinner} from "@/components/ui/spinner"
 import {FieldGroup} from "@/components/ui/field"
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from "@/components/ui/button"
-import { Pen,X,Check} from "lucide-react"
+import { X} from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppStore } from "@/app/stores/useAppStore"
 import { FormState,ClientStatus} from "@/lib/types"
 import { TextFieldClient } from "./text-field-client"
 
 export function FormClient(){
-    const {setSelectedTab,selectedTab,clientStatus,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
+    const {setSelectedTab,selectedTab,setClientStatus,clientStatus,getClient, client,isLoading,formClientState,setFormClientState} = useAppStore()
     
     const goToAddress=()=>{
         setSelectedTab("Address")
@@ -34,6 +34,11 @@ export function FormClient(){
             <CardTitle>Detalle de cliente </CardTitle>
             <CardDescription>Visualiza la información del cliente {client?.business_name} </CardDescription>
             </div>
+                  <Button onClick={()=>{
+                    setClientStatus(ClientStatus.ShowAll)
+                    }} variant="ghost" size="lg">
+                      <X className="h-20 w-20 text-lg text-black" />
+                    </Button>
             </CardHeader>
             <CardContent>
                 <Card>
@@ -71,7 +76,7 @@ export function FormClient(){
                                         Nombre de usuario
                                     </p>
                                     <p className="">
-                                        {client?.user.name}
+                                        {client?.user.username}
                                     </p>
                                     
                             </div>

@@ -47,8 +47,8 @@ export interface CustomerAddress {
 
 export interface User {
   id: string
-  isAdmin: boolean
-  name: string
+  is_admin: boolean
+  username: string
   email: string
   role: UserRole
   email_verified_at: any

@@ -4,7 +4,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  output: 'export',
+  output: 'standalone',
 
   images: {
     unoptimized: true,

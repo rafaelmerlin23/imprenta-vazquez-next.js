@@ -533,7 +533,7 @@ const PrintRequestForm = () => {
 									</p>
 								)}
 								<p className="text-xs text-muted-foreground">
-									Adjunta la captura o comprobante de tu transferencia
+									Adjunta el documento en formato PDF que deseas imprimir.
 								</p>
 							</div>
 

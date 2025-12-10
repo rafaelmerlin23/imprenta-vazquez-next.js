@@ -2,8 +2,10 @@
 const nextConfig = {
   basePath: '/app',
   output: 'standalone',
-  images: { unoptimized: true },
-  trailingSlash: false, // Esto prefiere /app sobre /app/
+  images: { 
+    unoptimized: true 
+  },
+  trailingSlash: true,
   typescript: { ignoreBuildErrors: true },
 };
 

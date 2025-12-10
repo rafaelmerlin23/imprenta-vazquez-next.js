@@ -1,17 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
-
-
-  images: {
-    unoptimized: true,
-  },
-
-  basePath:'/app'
-    
+  output: 'standalone',
+  images: { unoptimized: true },
+  trailingSlash: false,
+  basePath: '/app',
+  typescript: { ignoreBuildErrors: true },
 };
 
 export default nextConfig;

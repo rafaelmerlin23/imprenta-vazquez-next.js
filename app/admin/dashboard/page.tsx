@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -11,7 +10,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Users, FileText, Plus } from "lucide-react";
+import { LogOut, Users, FileText, Plus, FileArchive } from "lucide-react";
 import { RequestsTable } from "@/components/requests-table";
 import { ClientsTable } from "@/components/client-form/clients-table";
 import {
@@ -20,6 +19,7 @@ import {
 	FormState,
 	PrintRequest,
 	requestStatusOptions,
+	TypeReceipt,
 } from "@/lib/types";
 import { FormClient } from "@/components/client-form/form-client";
 import { CreateClient } from "@/components/client-form/add-client";
@@ -27,6 +27,9 @@ import { EditClient } from "@/components/client-form/edit-client";
 import { useAppStore } from "@/app/stores//useAppStore";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import axios from "@/lib/axios";
+import TypeReceiptsTable from "@/components/type-receipts-table";
+import Link from "next/link";
 
 // Mapeo correcto de IDs a estados
 const STATUS_MAP: Record<string, string> = {
@@ -38,7 +41,6 @@ const STATUS_MAP: Record<string, string> = {
 
 export default function AdminDashboard() {
 	const {
-		token,
 		requests,
 		getRequests,
 		logout,
@@ -46,12 +48,12 @@ export default function AdminDashboard() {
 		clientStatus,
 		setClientStatus,
 		setFormClientState,
-		isLoadRequests,
 	} = useAppStore();
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [filterRequests, setFilterRequest] = useState<PrintRequest[]>([]);
 	const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+	const [typeReceipts, setTypeReceipts] = useState<TypeReceipt[]>([]);
 
 	const closeSession = () => {
 		logout(router);
@@ -118,10 +120,14 @@ export default function AdminDashboard() {
 	useEffect(() => {
 		const loadData = async () => {
 			try {
+				setIsLoading(true);
 				await getClients();
 				await getRequests(setIsLoading);
+				const response = await axios.get("/api/type-receipts");
+				setTypeReceipts(response.data.data);
 			} catch (error) {
 				console.error("Error cargando datos:", error);
+			} finally {
 				setIsLoading(false);
 			}
 		};
@@ -172,7 +178,7 @@ export default function AdminDashboard() {
 
 			<main className="container mx-auto px-4 py-8">
 				<Tabs defaultValue="requests" className="space-y-6">
-					<TabsList className="grid w-full max-w-md grid-cols-2">
+					<TabsList className="grid w-full max-w-2xl grid-cols-3">
 						<TabsTrigger value="requests" className="gap-2">
 							<FileText className="h-4 w-4" />
 							Solicitudes
@@ -180,6 +186,10 @@ export default function AdminDashboard() {
 						<TabsTrigger value="clients" className="gap-2">
 							<Users className="h-4 w-4" />
 							Clientes
+						</TabsTrigger>
+						<TabsTrigger value="type_receipts" className="gap-2">
+							<FileArchive className="h-4 w-4" />
+							Tipos de Comprobantes
 						</TabsTrigger>
 					</TabsList>
 
@@ -331,6 +341,28 @@ export default function AdminDashboard() {
 										);
 								}
 							})()}
+						</Card>
+					</TabsContent>
+					<TabsContent value="type_receipts" className="space-y-6">
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0">
+								<div>
+									<CardTitle>Tipos de Comprobantes</CardTitle>
+									<CardDescription>
+										Administra los tipos de comprobantes disponibles en el
+										sistema
+									</CardDescription>
+								</div>
+								<Link href="/type-receipts/create">
+									<Button>
+										<Plus className="mr-2 h-4 w-4" />
+										Nuevo Tipo de Comprobante
+									</Button>
+								</Link>
+							</CardHeader>
+							<CardContent>
+								<TypeReceiptsTable typeReceipts={typeReceipts} />
+							</CardContent>
 						</Card>
 					</TabsContent>
 				</Tabs>

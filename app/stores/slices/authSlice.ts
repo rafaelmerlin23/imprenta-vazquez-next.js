@@ -77,33 +77,13 @@ export const createAuthSlice: StateCreator<
   },
 
 logout: async (router) => {
-  try {
-    await axios.post("/api/logout")
-    
-    set({
-      token: null,
-      currentLoginInfoUser: null,
-      isLogged: false,
-      requests: [],
-      clients: [],
-      clientStatus: ClientStatus.ShowAll
-    })
-
-    useAppStore.persist.clearStorage()
+  axios.post("/api/logout").then(()=>{
+    set({currentLoginInfoUser:null})
+    set({token:null})
+    set({isLogged:false})
+    localStorage.removeItem("app-storage");
     router.replace("/")
-  } catch (err) {
-    console.error("Logout error", err)
-    // Even if logout fails on server, clear local state
-    set({
-      token: null,
-      currentLoginInfoUser: null,
-      isLogged: false,
-      requests: [],
-      clients: [],
-      clientStatus: ClientStatus.ShowAll
-    })
-    useAppStore.persist.clearStorage()
-    router.replace("/")
-  }
+  })
+ 
 }
 })

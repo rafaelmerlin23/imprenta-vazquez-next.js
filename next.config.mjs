@@ -10,10 +10,8 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  basePath:
-    process.env.GITHUB_REPOSITORY?.split('/')[1]
-      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}`
-      : '',
+  basePath:'/app'
+    
 };
 
 export default nextConfig;

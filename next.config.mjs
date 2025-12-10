@@ -3,14 +3,17 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
 
-  output: 'standalone',
 
   images: {
     unoptimized: true,
   },
 
-  basePath: '',
+  basePath:
+    process.env.GITHUB_REPOSITORY?.split('/')[1]
+      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}`
+      : '',
 };
 
 export default nextConfig;

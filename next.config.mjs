@@ -1,10 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/app',
-  output: 'standalone',
-  images: { 
-    unoptimized: true 
-  },
+  basePath: "/app",
+  assetPrefix: "/app",
+  output: "standalone",
+  images: { unoptimized: true },
   trailingSlash: true,
   typescript: { ignoreBuildErrors: true },
 };

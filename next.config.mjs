@@ -1,18 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
-
-  images: {
-    unoptimized: true,
-  },
-
-  basePath:
-    process.env.GITHUB_REPOSITORY?.split('/')[1]
-      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}`
-      : '',
+  output: 'standalone',
+  images: { unoptimized: true },
+  trailingSlash: false,
+  basePath: '/app',
+  typescript: { ignoreBuildErrors: true },
 };
 
 export default nextConfig;
